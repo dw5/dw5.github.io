@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>QR Code Generator</title>
+</head>
+<body>
+  <h1>QR Code Generator</h1>
+  <p>Enter the text you want to encode in the QR code:</p>
+  <input id="text-input" type="text" oninput="generateQRCode()"/>
+  <br>
+  <br>
+  <canvas id="qr-code"></canvas>
+  <script>
+    function generateQRCode() {
+      // Get the text to encode from the input field
+      var text = document.getElementById("text-input").value;
+      // Set the size of the QR code
+      var size = 200;
+      // Create a new QR code using the QRious library
+      var qr = new QRious({
+        element: document.getElementById("qr-code"),
+        size: size,
+        value: text
+      });
+    }
+  </script>
+  <!-- Include the QRious library -->
+  <script src="https://unpkg.com/qrious@4.0.2/dist/qrious.min.js"></script>
+</body>
+</html>
