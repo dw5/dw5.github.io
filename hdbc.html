@@ -1,0 +1,75 @@
+
+<h1>Beefer Calc</h1>
+
+<form id="calcForm">
+  <h2>Mode <small>x / y</small></h2>
+  <input type="radio" name="xymode" id="xymode_x" value="X" checked>
+  <label for="xymode_x">X</label>
+
+  <input type="radio" name="xymode" id="xymode_y" value="Y">
+  <label for="xymode_y">Y</label>
+
+  <h2>Screen Area <small>800</small></h2>
+  <input type="number" name="screenarea" id="screenarea" value="800">
+
+  <h2>Value Initially <small>400</small></h2>
+  <input type="number" name="valuebefore" id="valuebefore">
+
+  <br><br><input type="submit" value="Calculate">
+</form>
+
+<div id="results"></div>
+
+<script>
+const screenareaInput = document.getElementById('screenarea');
+const valuebeforeInput = document.getElementById('valuebefore');
+
+screenareaInput.addEventListener('input', updateResults);
+valuebeforeInput.addEventListener('input', updateResults);
+
+const calcForm = document.getElementById('calcForm');
+const resultsDiv = document.getElementById('results');
+
+calcForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+  updateResults();
+  });
+
+function updateResults() {
+  // Get form values
+  const xymode = calcForm.elements.xymode.value;
+  const screenarea = parseInt(calcForm.elements.screenarea.value);
+  const valuebefore = parseInt(calcForm.elements.valuebefore.value);
+
+  // Calculate percentage change
+  let percentChange = 0;
+  if (screenarea === 0) {
+    percentChange = (valuebefore === 0) ? 0 : -100;
+  } else {
+    percentChange = (1 - valuebefore / screenarea) * 100;
+  }
+
+  // Calculate results
+  const basicMath = `${screenarea} - ${valuebefore} = ${screenarea - valuebefore}<br>
+                     ${screenarea} - (${screenarea} - ${valuebefore}) = ${valuebefore}`;
+  const percentageDifference = `${percentChange}`;
+  const invertedPercentage = `${100 - percentChange} | ${percentChange - 100}`;
+  const formula = `-(((Res${xymode} * ${Math.round(percentChange, 0)}) / 100) - Res${xymode})`;
+
+  // Update results div
+  resultsDiv.innerHTML = `
+    <h2>Basic math</h2>
+    <p>${basicMath}</p>
+
+    <h2>Percentage Difference</h2>
+    <p>${percentageDifference}</p>
+
+    <h2>Invert</h2>
+    <p>${invertedPercentage}</p>
+
+    <h2>Ready To Use Formula</h2>
+    <p>${formula}</p>
+  `;
+};
+</script>
+

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>chrcount </title>
+
+<style>
+textarea{
+width:100%;
+Height:80px;
+}
+textarea:focus{
+outline:none;
+}
+.textarea-container h3{
+ color:blue;
+ margin-top:50px;
+}
+.textarea-container{
+ padding-left:20%;
+ width:50%;
+}
+</style>
+
+<META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
+</head>
+<body>
+
+<div class="textarea-container">
+<textarea type="text" name="msg" onkeyup="remainingChars(160, this)" placeholder="Enter message (65-160).."></textarea>
+<div><span id="curChars"> 0 (current) </span> | <span id="curSplits"> 0 (splits) </span> <br> <span id="remainingChars"> 160 remaining</span></div>
+</div>
+
+<script type="text/javascript">
+
+num_splits = 0;
+usg_cost = 0.0000005;
+
+  var remainingChars= function(maxChars, input){
+    var totalChars= input.value.length;
+    var remaining= (maxChars - totalChars);
+    var displayChars=document.getElementById('curChars');
+    var displaySplits=document.getElementById('curSplits');
+    var displayCharsRem=document.getElementById('remainingChars');
+
+    num_splits=Math.ceil(totalChars/65);
+
+    displayChars.innerHTML=totalChars+" (current)";
+    displaySplits.innerHTML=num_splits+" (splits) | "+(num_splits*usg_cost)+" (cost)";
+
+    if(remaining>0){
+    displayCharsRem.innerHTML=remaining+" remaining";
+    displayCharsRem.style.color="green";
+    input.style.borderColor = "green";
+    }else{
+    displayCharsRem.innerHTML=remaining+" overused";
+    displayCharsRem.style.color="red";
+    input.style.borderColor = "red";
+    }
+}
+</script>
+</body>
+</html>

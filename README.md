@@ -1,18 +1,10 @@
-<img src="https://github.com/matiassingers/awesome-readme/raw/master/icon.png" align="right" />
-
-# Startpage
-Simple startpage.
-* Features my awesome site list
-* Some internal sites you can't access 
-* a live crypto price instead of some useless clock/date/weather feature
-
 <p align="center">
   <a href="https://dw5.github.io/">
     [Demo]
   </a>
   ||
-   <a href="https://github.com/Nimplex/99i-Startpage">
-    [Based on 99i by Nimplex]
+   <a href="https://github.com/pedro-pablo/minimal-startpage-template">
+    [Based on template by pedro-pablo ]
   </a>
 </p>
 
@@ -34,5 +26,3 @@ use apache/nginx (default or vhost) or php -S 0.0.0.0:8080
 6. Drag directory with source code to page.
 7. Done.
 ```
-## Screenshot (before fork)
-![Screenshot](https://raw.githubusercontent.com/Nimplex/99i-Startpage/main/assets/Screenshot.png)

@@ -1,4 +1,4 @@
-fetch('https://api.cryptonator.com/api/full/eur-xlm')
+/*fetch('https://api.cryptonator.com/api/full/eur-xlm')
 .then(function (response) {
 	return response.json();
 })
@@ -27,4 +27,4 @@ fetch('https://api.cryptonator.com/api/full/eur-btc')
 
 function appendData2(data) {
 document.getElementById("cc2").innerHTML = data.ticker.price 
-	}
+	}*/
