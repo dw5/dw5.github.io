@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<!-- V1 without TIME inputs -->  
+  <head>
+    <meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Date Duration Calculator</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+      }
+      h1 {
+        text-align: center;
+        margin-top: 40px;
+      }
+      .container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        /*height: 100vh;*/
+      }
+      .input-group {
+        display: flex;
+        flex-direction: column;
+        margin: 0 20px;
+      }
+      .input-group label {
+        margin-bottom: 10px;
+      }
+      .input-group input {
+        padding: 5px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+      }
+      .input-group input[type="date"] {
+        width: 180px;
+      }
+      .input-group input[type="time"] {
+        width: 150px;
+      }
+      .input-group button {
+        margin-top: 10px;
+        padding: 5px 10px;
+        border-radius: 5px;
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+      }
+      .result {
+        /*margin-top: 40px;*/
+        text-align: center;
+      }
+      .result h2 {
+        font-size: 24px;
+        font-weight: normal;
+        margin-bottom: 10px;
+      }
+      .result span {
+        font-size: 18px;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Date Duration Calculator</h1>
+    <div class="container">
+      <div class="input-group">
+        <label for="start-date">Start Date</label>
+        <input type="date" id="start-date">
+      </div>
+      <div class="input-group">
+        <label for="end-date">End Date</label>
+        <input type="date" id="end-date">
+      </div>
+      <button id="calculate-btn">Calculate</button>
+    </div>
+    <div class="result">
+      <h2>Duration</h2>
+      <span id="duration"></span>
+    </div>
+    <script>
+      const startDateInput = document.getElementById('start-date');
+      const endDateInput = document.getElementById('end-date');
+      const calculateBtn = document.getElementById('calculate-btn');
+      const durationSpan = document.getElementById('duration');
+
+  // calculate duration
+  function calculateDuration() {
+    const startDate = new Date(startDateInput.value);
+    const endDate = new Date(endDateInput.value);
+    const diff = Math.abs(endDate - startDate);
+
+    let years = Math.floor(diff / (1000 * 60 * 60 * 24 * 365));
+    let months = Math.floor(diff / (1000 * 60 * 60 * 24 * 30));
+    let days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    let hours = Math.floor(diff / (1000 * 60 * 60));
+    let minutes = Math.floor(diff / (1000 * 60));
+    let seconds = Math.floor(diff / 1000);
+
+    years_t = years > 0 ? years + ' year(s), ' : '';
+    months_t = months > 0 ? months + ' month(s), ' : '';
+    days_t = days > 0 ? days + ' day(s), ' : '';
+    hours_t = hours > 0 ? hours + ' hour(s), ' : '';
+    minutes_t = minutes > 0 ? minutes + ' minute(s), ' : '';
+    seconds_t = seconds > 0 ? seconds + ' second(s)' : '';
+
+    const duration = years_t + months_t + days_t + hours_t + minutes_t + seconds_t;
+
+// Convert to years and days
+const ryears = Math.floor(days / 365);
+const remainingDays = days % 365;
+//console.log(years + " years, " + remainingDays + " days");
+
+// Convert to months and days
+const rmonths = Math.floor(days / 30);
+const remainingDays2 = days % 30;
+//console.log(months + " months, " + remainingDays2 + " days");
+
+    durationSpan.innerText = ryears +' years and '+remainingDays+' days or '+rmonths+' months and '+remainingDays2+' days'+"\n"+duration;
+  }
+  
+  // event listeners
+  calculateBtn.addEventListener('click', calculateDuration);
+  startDateInput.addEventListener('change', calculateDuration);
+  endDateInput.addEventListener('change', calculateDuration);
+</script>
+<script>
+  // read URL parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  const startDateParam = urlParams.get('start-date');
+  const endDateParam = urlParams.get('end-date');
+
+  // set input values from URL parameters
+  if (startDateParam) {
+    startDateInput.value = startDateParam;
+  }
+  if (endDateParam) {
+    endDateInput.value = endDateParam;
+  }
+  
+  calculateDuration();
+  
+  // write input values to URL parameters
+  function updateUrlParams() {
+    const params = new URLSearchParams(window.location.search);
+    params.set('start-date', startDateInput.value);
+    params.set('end-date', endDateInput.value);
+    const newUrl = window.location.pathname + '?' + params.toString();
+    window.history.pushState(null, '', newUrl);
+  }
+
+
+/* TODAY */
+function setToday(input) {
+  const today = new Date().toISOString().substr(0, 10);
+  input.value = today;
+}
+
+const startDateTodayBtn = document.createElement('button');
+startDateTodayBtn.textContent = 'Today';
+startDateTodayBtn.addEventListener('click', () => {
+  setToday(startDateInput);
+  calculateDuration();
+  updateUrlParams();
+});
+startDateInput.after(startDateTodayBtn);
+
+const endDateTodayBtn = document.createElement('button');
+endDateTodayBtn.textContent = 'Today';
+endDateTodayBtn.addEventListener('click', () => {
+  setToday(endDateInput);
+  calculateDuration();
+  updateUrlParams();
+});
+endDateInput.after(endDateTodayBtn);
+
+</script>
+</body>
