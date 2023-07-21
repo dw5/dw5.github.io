@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ffmpeg / concat Drag and Drop Files</title>
+  <style>
+    /* Add some basic styles to the sortable list */
+    #sortableList {
+      list-style-type: none;
+      padding: 0;
+    }
+    #sortableList li {
+      cursor: move;
+      padding: 5px;
+      border: 1px solid #ccc;
+      margin-bottom: 5px;
+      background-color: #f2f2f2;
+    }
+  </style>
+</head>
+<body>
+  <h2>ffmpeg / concat Drag and Drop Files</h2>
+  <h3>ffmpeg -f concat -safe 0 -i input.txt -c copy noTranscodeMergedVideos.mp4</h3>
+  <div id="dropArea" style="border: 2px dashed #ccc; padding: 20px;">
+    Drop files here.
+  </div>
+  <h3>Sortable List (DEPENDS ON Sortable.js)</h3>
+  <ul id="sortableList">
+  </ul>
+  <button id="exportButton">Export as TXT</button>
+
+  <!-- Include the Sortable.js library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
+  <script>
+document.addEventListener("DOMContentLoaded", () => {
+  const dropArea = document.getElementById("dropArea");
+  const sortableList = document.getElementById("sortableList");
+  const exportButton = document.getElementById("exportButton");
+  let fileList = [];
+
+  // Prevent default behavior for drag and drop events
+  dropArea.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    dropArea.style.backgroundColor = "#f2f2f2";
+  });
+
+  dropArea.addEventListener("dragleave", (e) => {
+    e.preventDefault();
+    dropArea.style.backgroundColor = "white";
+  });
+
+  dropArea.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dropArea.style.backgroundColor = "white";
+    const files = e.dataTransfer.files;
+
+    // Process dropped files
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      fileList.push(file.name);
+    }
+
+    // Refresh the sortable list
+    updateSortableList();
+  });
+
+  // Function to update the sortable list
+  function updateSortableList() {
+    sortableList.innerHTML = "";
+
+    fileList.forEach((filename, index) => {
+      const listItem = document.createElement("li");
+      listItem.textContent = `${index + 1}. ${filename}`;
+	  //listItem.textContent = `${index + 1}. file '${filename}'`;
+	  listItem.setAttribute("draggable", true); // Set draggable attribute directly
+      sortableList.appendChild(listItem);
+    });
+
+    // Initialize the Sortable.js instance for the sortable list
+    if (sortableList.sortableInstance) {
+      sortableList.sortableInstance.destroy();
+    }
+
+    sortableList.sortableInstance = new Sortable(sortableList, {
+      animation: 150,
+      ghostClass: "sortable-ghost",
+      onUpdate: () => {
+        // After sorting, update the file list based on the new order
+        const listItems = sortableList.querySelectorAll("li");
+        fileList = [];
+        listItems.forEach((item, index) => {
+          const filename = item.textContent.replace(/^\d+\.\s/, "");
+          fileList.push(filename);
+          item.textContent = `${index + 1}. ${filename}`;
+        });
+      },
+    });
+  }
+
+  // Export the list as a TXT file when the button is clicked
+  exportButton.addEventListener("click", () => {
+    if (fileList.length === 0) {
+      alert("The list is empty.");
+      return;
+    }
+
+    const txtContent = fileList.map((filename) => `file '${filename}'`).join("\n");
+    const blob = new Blob([txtContent], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "input.txt";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+});
+
+</script>
+</body>
+</html>
