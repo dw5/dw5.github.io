@@ -27,6 +27,9 @@
   <ul id="sortableList">
   </ul>
   <button id="exportButton">Export as TXT</button>
+  <div id="previewArea" style="margin-top:8px;border: 2px dashed #ccc; padding: 20px;">
+    
+  </div>
 
   <!-- Include the Sortable.js library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
@@ -35,6 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const dropArea = document.getElementById("dropArea");
   const sortableList = document.getElementById("sortableList");
   const exportButton = document.getElementById("exportButton");
+  const previewArea = document.getElementById("previewArea");
   let fileList = [];
 
   // Prevent default behavior for drag and drop events
@@ -61,6 +65,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Refresh the sortable list
     updateSortableList();
+	updatePreview()
   });
 
   // Function to update the sortable list
@@ -92,9 +97,21 @@ document.addEventListener("DOMContentLoaded", () => {
           fileList.push(filename);
           item.textContent = `${index + 1}. ${filename}`;
         });
+		updatePreview();
       },
     });
   }
+  
+  // Update DIV for text box
+	function updatePreview() {
+    if (fileList.length === 0) {
+      previewArea.innerHTML = "The list is empty."; // innerHTML since textContent no line breaks
+      return;
+    }
+
+    const txtContent = fileList.map((filename) => `file '${filename}'`).join("<br>");
+    previewArea.innerHTML = txtContent; // Use innerHTML instead of textContent
+  }; 
 
   // Export the list as a TXT file when the button is clicked
   exportButton.addEventListener("click", () => {
