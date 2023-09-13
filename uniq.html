@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Remove Duplicate Lines, keep only unique / Javascript uniq</title>
+</head>
+<body>
+    <h1>Remove Duplicate Lines, keep only unique / Javascript uniq</h1>
+    <textarea id="inputText" rows="10" cols="50" placeholder="Enter text with duplicate lines"></textarea>
+    <br><button onclick="removeDuplicates()">Remove Duplicates</button>
+    <h2>Result:</h2>
+    <textarea id="outputText" rows="10" cols="50" readonly></textarea>
+    <br>
+	<button onclick="copyToClipboard()">Copy to Clipboard</button>
+    <button onclick="saveToFile()">Save to File</button>
+
+    <script>
+        function removeDuplicates() {
+            const inputTextArea = document.getElementById("inputText");
+            const outputTextArea = document.getElementById("outputText");
+
+            const inputText = inputTextArea.value;
+            const lines = inputText.split('\n');
+            const uniqueLines = [...new Set(lines)];
+
+            outputTextArea.value = uniqueLines.join('\n');
+        }
+		
+        function copyToClipboard() {
+            const outputTextArea = document.getElementById("outputText");
+            outputTextArea.select();
+            document.execCommand("copy");
+        }
+
+        function saveToFile() {
+            const outputTextArea = document.getElementById("outputText");
+            const outputText = outputTextArea.value;
+
+            const blob = new Blob([outputText], { type: "text/plain" });
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = "output.txt";
+            a.style.display = "none";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+    </script>
+</body>
+</html>
