@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Text/Hex Input to Div Colors (Steganography)</title>
+    <style>
+		body{margin:0}
+        #container, #flagcontainer {
+            display: flex;
+            flex-direction: row;
+        }
+
+        .colorDiv {
+            flex: 1;
+            height: 100vh;
+        }
+		.leftoverOverlay {
+			position: absolute;
+			right: 0;
+			padding: 5px;
+			/*background-color: rgba(0, 0, 0, 0.5);
+			color: white;*/
+			font-size: 12vh;
+			filter: invert(1);
+			mix-blend-mode: difference;
+			z-index: 1;
+		}
+    </style>
+</head>
+<body>
+    <div id="container">
+    <div>
+	<input onkeyup="textToHex(this)" type="text" id="textToHex" placeholder="Enter text">
+     &nbsp;
+	</div>
+	<div>
+	<input onkeyup="updateDiv()" type="text" id="hexInput" placeholder="Enter hex code">
+    <button onclick="updateDiv()">Update Div</button>&nbsp;<input onclick="updateDiv()" type="checkbox" id="toggleLeftovers"> Add leftovers to 000000
+	<a href="https://en.wikipedia.org/wiki/Illegal_number">[about this]</a>
+	</div>
+	</div>
+    <div id="flagcontainer"></div>
+
+    <script>
+	    function textToHex(input) {
+            const textToHex = input.value;
+            const hex = textToHexadecimal(textToHex);
+            document.getElementById('hexInput').value = hex;
+			updateDiv();
+        }
+
+        function textToHexadecimal(text) {
+            return text.split('').map(char => char.charCodeAt(0).toString(16)).join('');
+        }
+		
+        function updateDiv() {
+            const hexInput = document.getElementById('hexInput').value;
+            const containerDiv = document.getElementById('flagcontainer');
+			const toggleLeftovers = document.getElementById('toggleLeftovers').checked;
+            
+            // Clear the existing content of the container
+            containerDiv.innerHTML = '';
+
+            // Regular expression to match 6-character hex codes
+            const hexPattern = /[0-9A-Fa-f]{6}/g;
+
+            // Find all matches in the input
+            const matches = hexInput.match(hexPattern);
+			//console.log(matches);
+            if (matches) {
+                matches.forEach(hex => {
+                    const colorBox = document.createElement('div');
+                    colorBox.className = 'colorDiv';
+                    colorBox.style.backgroundColor = '#' + hex;
+                    containerDiv.appendChild(colorBox);
+                });
+            }
+            // Check for remaining characters in hexInput
+            const remainingHex = hexInput.replace(hexPattern, '');
+
+            if (toggleLeftovers && remainingHex.length > 0) {
+			// Add remaining characters to 000000
+			
+			/* puts at the end 
+			const zeroPaddedHex = '0'.repeat(6 - remainingHex.length) + remainingHex;
+			containerDiv.appendChild(createColorDivWithHex(zeroPaddedHex));
+			*/
+			/* puts at the start */
+			const zeroPaddedHex = remainingHex + '0'.repeat(6 - remainingHex.length);
+			containerDiv.appendChild(createColorDivWithHex(zeroPaddedHex));
+			
+            } else if (remainingHex.length > 0) {
+                // Create overlay text
+                const overlayText = document.createElement('div');
+                overlayText.className = 'leftoverOverlay';
+                overlayText.innerText = '+' + remainingHex;
+                containerDiv.appendChild(overlayText);
+            }
+        }
+		
+		function createColorDivWithHex(hex) {
+            const colorBox = document.createElement('div');
+            colorBox.className = 'colorDiv';
+            colorBox.style.backgroundColor = '#' + hex;
+            return colorBox;
+        }
+    </script>
+</body>
+</html>
