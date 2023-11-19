@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Date Duration Calculator</title>
+    <style>/* skip */</style>
+	    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+      }
+      h1 {
+        text-align: center;
+        margin-top: 40px;
+      }
+      .container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        /*height: 100vh;*/
+      }
+      .input-group {
+        display: flex;
+        flex-direction: column;
+        margin: 0 20px;
+      }
+      .input-group label {
+        margin-bottom: 10px;
+      }
+      .input-group input {
+        padding: 5px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+      }
+      .input-group input[type="date"] {
+        width: 180px;
+      }
+      .input-group input[type="time"] {
+        width: 150px;
+      }
+      .input-group button {
+        margin-top: 10px;
+        padding: 5px 10px;
+        border-radius: 5px;
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+      }
+      .result {
+        margin-top: 40px;
+        text-align: center;
+      }
+      .result h2 {
+        font-size: 24px;
+        font-weight: normal;
+        margin-bottom: 10px;
+      }
+      .result span {
+        font-size: 18px;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Date Duration Calculator</h1>
+    <div class="container">
+      <div class="input-group">
+        <label for="start-date">Start Date</label>
+        <input type="date" id="start-date">
+        <label for="start-time">Start Time</label>
+        <input id="start-time" disabled>
+      </div>
+      <div class="input-group">
+        <label for="end-date">End Date</label>
+        <input type="date" id="end-date">
+        <label for="end-time">End Time</label>
+        <input id="end-time" disabled>
+      </div>
+	    <div class="input-group">
+    <label for="include-time">Include Time</label>
+    <input type="checkbox" id="include-time">
+  </div>
+      <button id="calculate-btn">Calculate</button>
+    </div>
+    <div class="result">
+      <h2>Duration</h2>
+      <span id="duration"></span>
+    </div>
+    <script>
+// get input elements
+const startDateInput = document.getElementById('start-date');
+const startTimeInput = document.getElementById('start-time');
+const endDateInput = document.getElementById('end-date');
+const endTimeInput = document.getElementById('end-time');
+const includeTimeCheckbox = document.getElementById('include-time'); // new line
+const calculateBtn = document.getElementById('calculate-btn');
+const durationOutput = document.getElementById('duration');
+
+calculateBtn.addEventListener('click', calculateDuration);
+
+      // enable/disable time inputs
+      function toggleTimeInputs() {
+        if (startDateInput.value && endDateInput.value) {
+          startTimeInput.disabled = false;
+          endTimeInput.disabled = false;
+        } else {
+          startTimeInput.disabled = true;
+          endTimeInput.disabled = true;
+        }
+      }
+
+// add event listeners to input elements
+startDateInput.addEventListener('input', () => {
+  toggleTimeInputs();
+  calculateDuration();
+  updateUrlParams();
+});
+startTimeInput.addEventListener('input', () => {
+  calculateDuration();
+  updateUrlParams();
+});
+endDateInput.addEventListener('input', () => {
+  toggleTimeInputs();
+  calculateDuration();
+  updateUrlParams();
+});
+endTimeInput.addEventListener('input', () => {
+  calculateDuration();
+  updateUrlParams();
+});
+includeTimeCheckbox.addEventListener('change', () => {
+  toggleTimeInputs();
+  calculateDuration();
+  updateUrlParams();
+});
+
+function addTimeToDate(date, time) {
+  if (time === null) {
+    return date;
+  }
+
+  const newDate = new Date(date);
+  newDate.setHours(time.hours || 0, time.minutes || 0, time.seconds || 0);
+
+  return newDate;
+}
+
+
+function parseDuration(durationMs) {
+  const ONE_SECOND = 1000;
+  const ONE_MINUTE = ONE_SECOND * 60;
+  const ONE_HOUR = ONE_MINUTE * 60;
+  const ONE_DAY = ONE_HOUR * 24;
+
+  const days = Math.floor(durationMs / ONE_DAY);
+  const hours = Math.floor((durationMs % ONE_DAY) / ONE_HOUR);
+  const minutes = Math.floor((durationMs % ONE_HOUR) / ONE_MINUTE);
+  const seconds = Math.floor((durationMs % ONE_MINUTE) / ONE_SECOND);
+
+  return { days, hours, minutes, seconds };
+}
+
+function parseTime(timeStr) {
+  if (!timeStr) return null;
+
+  const parts = timeStr.split(':').map(part => parseInt(part, 10));
+  if (parts.length < 2 || parts.some(isNaN)) return null;
+
+  const hours = parts[0];
+  const minutes = parts[1];
+  const seconds = parts.length === 3 ? parts[2] : 0;
+
+  return {
+    hours: hours,
+    minutes: minutes,
+    seconds: seconds
+  };
+}
+
+function formatDuration(durationObj) {
+  const { years, months, days, hours, minutes, seconds } = durationObj;
+  const yearStr = years > 0 ? `${years} year${years > 1 ? 's' : ''}` : '';
+  const monthStr = months > 0 ? `${months} month${months > 1 ? 's' : ''}` : '';
+  const dayStr = days > 0 ? `${days} day${days > 1 ? 's' : ''}` : '';
+  const hourStr = hours > 0 ? `${hours} hour${hours > 1 ? 's' : ''}` : '';
+  const minuteStr = minutes > 0 ? `${minutes} minute${minutes > 1 ? 's' : ''}` : '';
+  const secondStr = seconds > 0 ? `${seconds} second${seconds > 1 ? 's' : ''}` : '';
+
+  const timeStr = [hourStr, minuteStr, secondStr].filter(str => str !== '').join(', ');
+  const dateStr = [yearStr, monthStr, dayStr].filter(str => str !== '').join(', ');
+
+  if (dateStr !== '' && timeStr !== '') {
+    return `${dateStr}, ${timeStr}`;
+  } else if (dateStr !== '') {
+    return dateStr;
+  } else if (timeStr !== '') {
+    return timeStr;
+  } else {
+    return '0 seconds';
+  }
+}
+
+  // calculate duration
+function calculateDuration() {
+  const startDate = new Date(startDateInput.value);
+  const endDate = new Date(endDateInput.value);
+
+  let startTime = includeTimeCheckbox.checked ? parseTime(startTimeInput.value) : null;
+  let endTime = includeTimeCheckbox.checked ? parseTime(endTimeInput.value) : null;
+
+  console.log("startDate:", startDate);
+  console.log("startTime:", startTime);
+  console.log("endDate:", endDate);
+  console.log("endTime:", endTime);
+
+  const startDateTime = addTimeToDate(startDate, startTime);
+  const endDateTime = addTimeToDate(endDate, endTime);
+
+  console.log("startDateTime:", startDateTime);
+  console.log("endDateTime:", endDateTime);
+
+  const durationMs = endDateTime - startDateTime;
+
+  console.log("durationMs:", durationMs);
+
+  const durationObj = parseDuration(durationMs);
+  console.log("parsed durationObj:", durationObj);
+
+  const formattedDuration = formatDuration(durationObj);
+
+  // display primary result
+  durationOutput.textContent = formattedDuration;
+
+  // display alternative time units
+  displayAlternativeTimeUnits(durationMs);
+}
+
+
+
+function displayAlternativeTimeUnits(durationMs) {
+  const alternativeTimeUnits = document.getElementById('alternative-time-units');
+  if (alternativeTimeUnits) {
+    alternativeTimeUnits.parentNode.removeChild(alternativeTimeUnits);
+  }
+
+  const alternativeTimeUnitsDiv = document.createElement('div');
+  alternativeTimeUnitsDiv.id = 'alternative-time-units';
+
+  const alternativeTimeUnitsHeader = document.createElement('h3');
+  alternativeTimeUnitsHeader.textContent = 'Alternative time units';
+
+  const alternativeTimeUnitsList = document.createElement('ul');
+
+  const units = [
+    { label: 'seconds', value: durationMs / 1000 },
+    { label: 'minutes', value: durationMs / (1000 * 60) },
+    { label: 'hours', value: durationMs / (1000 * 60 * 60) },
+    { label: 'days', value: durationMs / (1000 * 60 * 60 * 24) },
+    { label: '% of 2023', value: (durationMs / (1000 * 60 * 60 * 24)) / 2023 * 100 },
+  ];
+
+  units.forEach(unit => {
+    const listItem = document.createElement('li');
+    listItem.textContent = `${unit.label}: ${unit.value.toFixed(2)}`;
+    alternativeTimeUnitsList.appendChild(listItem);
+  });
+
+  alternativeTimeUnitsDiv.appendChild(alternativeTimeUnitsHeader);
+  alternativeTimeUnitsDiv.appendChild(alternativeTimeUnitsList);
+  document.body.appendChild(alternativeTimeUnitsDiv);
+}
+
+</script>
+<script>
+  // read URL parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  const startDateParam = urlParams.get('start-date');
+  const startTimeParam = urlParams.get('start-time');
+  const endDateParam = urlParams.get('end-date');
+  const endTimeParam = urlParams.get('end-time');
+
+  // set input values from URL parameters
+  if (startDateParam) {
+    startDateInput.value = startDateParam;
+  }
+  if (startTimeParam) {
+    startTimeInput.value = startTimeParam;
+  }
+  if (endDateParam) {
+    endDateInput.value = endDateParam;
+  }
+  if (endTimeParam) {
+    endTimeInput.value = endTimeParam;
+  }
+  // write input values to URL parameters
+  function updateUrlParams() {
+    const params = new URLSearchParams(window.location.search);
+    params.set('start-date', startDateInput.value);
+    params.set('start-time', startTimeInput.value);
+    params.set('end-date', endDateInput.value);
+    params.set('end-time', endTimeInput.value);
+    const newUrl = window.location.pathname + '?' + params.toString();
+    window.history.pushState(null, '', newUrl);
+  }
+
+
+/* TODAY */
+function setToday(input) {
+  const today = new Date().toISOString().substr(0, 10);
+  input.value = today;
+}
+
+const startDateTodayBtn = document.createElement('button');
+startDateTodayBtn.textContent = 'Today';
+startDateTodayBtn.addEventListener('click', () => {
+  setToday(startDateInput);
+  toggleTimeInputs();
+  calculateDuration();
+  updateUrlParams();
+});
+startDateInput.after(startDateTodayBtn);
+
+const endDateTodayBtn = document.createElement('button');
+endDateTodayBtn.textContent = 'Today';
+endDateTodayBtn.addEventListener('click', () => {
+  setToday(endDateInput);
+  toggleTimeInputs();
+  calculateDuration();
+  updateUrlParams();
+});
+endDateInput.after(endDateTodayBtn);
+
+</script>
+</body>
