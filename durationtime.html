@@ -358,6 +358,7 @@ units.forEach(unit => {
   const startTimeParam = urlParams.get('start-time');
   const endDateParam = urlParams.get('end-date');
   const endTimeParam = urlParams.get('end-time');
+  const cTimeParam = urlParams.get('ctime');
 
   // set input values from URL parameters
   if (startDateParam) {
@@ -372,6 +373,15 @@ units.forEach(unit => {
   if (endTimeParam) {
     endTimeInput.value = endTimeParam;
   }
+  if (cTimeParam) {
+  if (cTimeParam=="true"){
+  console.log("true");
+    includeTimeCheckbox.checked = true;
+	}
+  }
+
+  calculateDuration();
+
   // write input values to URL parameters
   function updateUrlParams() {
     const params = new URLSearchParams(window.location.search);
@@ -379,6 +389,7 @@ units.forEach(unit => {
     params.set('start-time', startTimeInput.value);
     params.set('end-date', endDateInput.value);
     params.set('end-time', endTimeInput.value);
+    params.set('ctime', includeTimeCheckbox.checked);
     const newUrl = window.location.pathname + '?' + params.toString();
     window.history.pushState(null, '', newUrl);
   }
