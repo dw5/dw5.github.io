@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Date Duration Calculator</title>
+    <title>Date + Time Duration Calculator</title>
     <style>/* skip */</style>
 	    <style>
       body {
@@ -62,10 +62,16 @@
         font-size: 18px;
         font-weight: bold;
       }
+	  #alternative-time-units, #or-time-units{
+	  text-align: center;
+	  }
+	  ul {
+		list-style-type: none;
+		}
     </style>
   </head>
   <body>
-    <h1>Date Duration Calculator</h1>
+    <h1>Date + Time Duration Calculator</h1>
     <div class="container">
       <div class="input-group">
         <label for="start-date">Start Date</label>
@@ -235,10 +241,65 @@ function calculateDuration() {
   durationOutput.textContent = formattedDuration;
 
   // display alternative time units
+  displayOrTime(durationMs);
   displayAlternativeTimeUnits(durationMs);
 }
 
+function displayOrTime(durationMs) {
+  const orTimeUnits = document.getElementById('or-time-units');
+  if (orTimeUnits) {
+    orTimeUnits.parentNode.removeChild(orTimeUnits);
+  }
 
+  const orTimeUnitsDiv = document.createElement('div');
+  orTimeUnitsDiv.id = 'or-time-units';
+
+  const orTimeUnitsHeader = document.createElement('h3');
+  orTimeUnitsHeader.textContent = 'Or time units [NOT ACURATE]';
+
+  const orTimeUnitsList = document.createElement('ul');
+
+  const years = Math.floor(durationMs / (1000 * 60 * 60 * 24 * 365.25));
+  const months = Math.floor((durationMs % (1000 * 60 * 60 * 24 * 365.25)) / (1000 * 60 * 60 * 24 * 30.44));
+  const days = Math.floor((durationMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60 * 24));
+  const seconds = Math.floor((durationMs % (1000 * 60)) / 1000);
+
+  const unitsYears = [
+    { label: 'years', value: years },
+    { label: 'months', value: months },
+    { label: 'days', value: days },
+    { label: 'seconds', value: seconds },
+  ];
+
+  const unitsMonths = [
+    { label: 'months', value: months },
+    { label: 'days', value: days },
+    { label: 'seconds', value: seconds },
+  ];
+
+  const formatUnits = (unitArray) => {
+    return unitArray.map(unit => {
+      const formattedValue = unit.value % 1 === 0 ? unit.value.toFixed(0) : unit.value.toFixed(2);
+      const valueText = formattedValue === '0' ? '0' : formattedValue.replace(/\.00$/, '');
+      return `${valueText} ${unit.label}${unit.value !== 1 ? '' : ''}`;
+    });
+  };
+
+  const orTimeTextYears = `Or ${formatUnits(unitsYears).join(', ')}`;
+  const orTimeTextMonths = `Or ${formatUnits(unitsMonths).join(', ')}`;
+
+  const listItemYears = document.createElement('li');
+  listItemYears.textContent = orTimeTextYears;
+  orTimeUnitsList.appendChild(listItemYears);
+
+  const listItemMonths = document.createElement('li');
+  listItemMonths.textContent = orTimeTextMonths;
+  orTimeUnitsList.appendChild(listItemMonths);
+
+  orTimeUnitsDiv.appendChild(orTimeUnitsHeader);
+  orTimeUnitsDiv.appendChild(orTimeUnitsList);
+  document.body.appendChild(orTimeUnitsDiv);
+}
 
 function displayAlternativeTimeUnits(durationMs) {
   const alternativeTimeUnits = document.getElementById('alternative-time-units');
@@ -259,19 +320,35 @@ function displayAlternativeTimeUnits(durationMs) {
     { label: 'minutes', value: durationMs / (1000 * 60) },
     { label: 'hours', value: durationMs / (1000 * 60 * 60) },
     { label: 'days', value: durationMs / (1000 * 60 * 60 * 24) },
-    { label: '% of 2023', value: (durationMs / (1000 * 60 * 60 * 24)) / 2023 * 100 },
+    { label: 'weeks', value: durationMs / (1000 * 60 * 60 * 24 * 7) },
+    { label: '% of a common year (365 days)', value: (durationMs / (1000 * 60 * 60 * 24)) / 365 * 100 },
   ];
 
-  units.forEach(unit => {
-    const listItem = document.createElement('li');
-    listItem.textContent = `${unit.label}: ${unit.value.toFixed(2)}`;
-    alternativeTimeUnitsList.appendChild(listItem);
-  });
+units.forEach(unit => {
+  const formattedValue = unit.value % 1 === 0 ? unit.value.toFixed(0) : unit.value.toFixed(2);
+  const valueText = formattedValue === '0' ? '0' : formattedValue.replace(/\.00$/, '');
+
+  if (unit.label === 'weeks') {
+    const weeks = Math.floor(unit.value);
+    const days = Math.floor((unit.value % 1) * 7);
+    unit.formattedValue = `${weeks > 0 ? weeks + ' week' + (weeks > 1 ? '' : '') : ''} ${days > 0 ? 'and ' + days + ' day' + (days > 1 ? 's' : '') : ''}`;
+  } else {
+    unit.formattedValue = `${valueText} ${unit.label}${unit.value !== 1 ? '' : ''}`;
+  }
+
+  const listItem = document.createElement('li');
+  listItem.textContent = unit.formattedValue;
+  alternativeTimeUnitsList.appendChild(listItem);
+});
+
 
   alternativeTimeUnitsDiv.appendChild(alternativeTimeUnitsHeader);
   alternativeTimeUnitsDiv.appendChild(alternativeTimeUnitsList);
   document.body.appendChild(alternativeTimeUnitsDiv);
 }
+
+
+
 
 </script>
 <script>
