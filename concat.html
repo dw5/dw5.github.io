@@ -26,7 +26,7 @@
   <h3>Sortable List (DEPENDS ON Sortable.js)</h3>
   <ul id="sortableList">
   </ul>
-  <button id="exportButton">Export as TXT</button>
+  <button id="sortButton">Sort (Natural A-Z)</button><button id="exportButton">Export as TXT</button>
   <div id="previewArea" style="margin-top:8px;border: 2px dashed #ccc; padding: 20px;">
     
   </div>
@@ -34,106 +34,130 @@
   <!-- Include the Sortable.js library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
   <script>
-document.addEventListener("DOMContentLoaded", () => {
-  const dropArea = document.getElementById("dropArea");
-  const sortableList = document.getElementById("sortableList");
-  const exportButton = document.getElementById("exportButton");
-  const previewArea = document.getElementById("previewArea");
-  let fileList = [];
+    document.addEventListener("DOMContentLoaded", () => {
+      const dropArea = document.getElementById("dropArea");
+      const sortableList = document.getElementById("sortableList");
+      const exportButton = document.getElementById("exportButton");
+      const sortButton = document.getElementById("sortButton");
+      const previewArea = document.getElementById("previewArea");
+      let fileList = [];
 
-  // Prevent default behavior for drag and drop events
-  dropArea.addEventListener("dragover", (e) => {
-    e.preventDefault();
-    dropArea.style.backgroundColor = "#f2f2f2";
-  });
+      // Prevent default behavior for drag and drop events
+      dropArea.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropArea.style.backgroundColor = "#f2f2f2";
+      });
 
-  dropArea.addEventListener("dragleave", (e) => {
-    e.preventDefault();
-    dropArea.style.backgroundColor = "white";
-  });
+      dropArea.addEventListener("dragleave", (e) => {
+        e.preventDefault();
+        dropArea.style.backgroundColor = "white";
+      });
 
-  dropArea.addEventListener("drop", (e) => {
-    e.preventDefault();
-    dropArea.style.backgroundColor = "white";
-    const files = e.dataTransfer.files;
+      dropArea.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropArea.style.backgroundColor = "white";
+        const files = e.dataTransfer.files;
 
-    // Process dropped files
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      fileList.push(file.name);
-    }
+        // Process dropped files
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          fileList.push(file.name);
+        }
 
-    // Refresh the sortable list
-    updateSortableList();
-	updatePreview()
-  });
+        // Refresh the sortable list
+        updateSortableList();
+        updatePreview();
+      });
 
-  // Function to update the sortable list
-  function updateSortableList() {
-    sortableList.innerHTML = "";
+      // Function to update the sortable list
+      function updateSortableList() {
+        sortableList.innerHTML = "";
 
-    fileList.forEach((filename, index) => {
-      const listItem = document.createElement("li");
-      listItem.textContent = `${index + 1}. ${filename}`;
-	  //listItem.textContent = `${index + 1}. file '${filename}'`;
-	  listItem.setAttribute("draggable", true); // Set draggable attribute directly
-      sortableList.appendChild(listItem);
-    });
-
-    // Initialize the Sortable.js instance for the sortable list
-    if (sortableList.sortableInstance) {
-      sortableList.sortableInstance.destroy();
-    }
-
-    sortableList.sortableInstance = new Sortable(sortableList, {
-      animation: 150,
-      ghostClass: "sortable-ghost",
-      onUpdate: () => {
-        // After sorting, update the file list based on the new order
-        const listItems = sortableList.querySelectorAll("li");
-        fileList = [];
-        listItems.forEach((item, index) => {
-          const filename = item.textContent.replace(/^\d+\.\s/, "");
-          fileList.push(filename);
-          item.textContent = `${index + 1}. ${filename}`;
+        fileList.forEach((filename, index) => {
+          const listItem = document.createElement("li");
+          listItem.textContent = `${index + 1}. ${filename}`;
+          //listItem.textContent = `${index + 1}. file '${filename}'`;
+          listItem.setAttribute("draggable", true); // Set draggable attribute directly
+          sortableList.appendChild(listItem);
         });
-		updatePreview();
-      },
+
+        // Initialize the Sortable.js instance for the sortable list
+        if (sortableList.sortableInstance) {
+          sortableList.sortableInstance.destroy();
+        }
+
+        sortableList.sortableInstance = new Sortable(sortableList, {
+          animation: 150,
+          ghostClass: "sortable-ghost",
+          onUpdate: () => {
+            // After sorting, update the file list based on the new order
+            const listItems = sortableList.querySelectorAll("li");
+            fileList = [];
+            listItems.forEach((item, index) => {
+              const filename = item.textContent.replace(/^\d+\.\s/, "");
+              fileList.push(filename);
+              item.textContent = `${index + 1}. ${filename}`;
+            });
+            updatePreview();
+          },
+        });
+      }
+
+      // Update DIV for text box
+      function updatePreview() {
+        if (fileList.length === 0) {
+          previewArea.innerHTML = "The list is empty."; // innerHTML since textContent no line breaks
+          return;
+        }
+
+        const txtContent = fileList.map((filename) => `file '${filename}'`).join("<br>");
+        previewArea.innerHTML = txtContent; // Use innerHTML instead of textContent
+      };
+
+      // Export the list as a TXT file when the button is clicked
+      exportButton.addEventListener("click", () => {
+        if (fileList.length === 0) {
+          alert("The list is empty.");
+          return;
+        }
+
+        const txtContent = fileList.map((filename) => `file '${filename}'`).join("\n");
+        const blob = new Blob([txtContent], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "input.txt";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      });
+
+      // Sort the list naturally when the button is clicked
+      sortButton.addEventListener("click", () => {
+        fileList.sort(naturalSort);
+        updateSortableList();
+        updatePreview();
+      });
+
+      // Natural sorting function
+      function naturalSort(a, b) {
+        var ax = [], bx = [];
+
+        a.replace(/(\d+)|(\D+)/g, function(_, $1, $2) { ax.push([$1 || Infinity, $2 || ""]) });
+        b.replace(/(\d+)|(\D+)/g, function(_, $1, $2) { bx.push([$1 || Infinity, $2 || ""]) });
+
+        while (ax.length && bx.length) {
+          var an = ax.shift();
+          var bn = bx.shift();
+          var nn = (an[0] - bn[0]) || an[1].localeCompare(bn[1]);
+          if (nn) return nn;
+        }
+
+        return ax.length - bx.length;
+      }
     });
-  }
-  
-  // Update DIV for text box
-	function updatePreview() {
-    if (fileList.length === 0) {
-      previewArea.innerHTML = "The list is empty."; // innerHTML since textContent no line breaks
-      return;
-    }
-
-    const txtContent = fileList.map((filename) => `file '${filename}'`).join("<br>");
-    previewArea.innerHTML = txtContent; // Use innerHTML instead of textContent
-  }; 
-
-  // Export the list as a TXT file when the button is clicked
-  exportButton.addEventListener("click", () => {
-    if (fileList.length === 0) {
-      alert("The list is empty.");
-      return;
-    }
-
-    const txtContent = fileList.map((filename) => `file '${filename}'`).join("\n");
-    const blob = new Blob([txtContent], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "input.txt";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  });
-});
-
-</script>
+  </script>
 </body>
 </html>
