@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Formatter</title>
+</head>
+<body>
+    <label for="fullname">Full Name:</label>
+    <input type="text" id="fullname">
+    <label for="domain">Domain:</label>
+    <input type="text" id="domain" value=""><br><br>
+    <div>Formatted Email: <b id="output"></b> <button onclick="clipbrd()" style="margin-left: 18px;">Copy text</button></div>
+
+    <script>
+        // Function to format and display the email
+        function formatAndDisplay() {
+            let fullname = document.getElementById("fullname").value.trim();
+            let domain = document.getElementById("domain").value.trim();
+            let formattedEmail = formatEmail(fullname, domain);
+            document.getElementById("output").innerText = formattedEmail; //"text"+formattedEmail
+        }
+
+		function clipbrd() {
+		  let fullname = document.getElementById("fullname").value.trim();
+		  let domain = document.getElementById("domain").value.trim();
+		  let formattedEmail = formatEmail(fullname, domain);
+
+			// Check if the protocol is HTTP
+			  if (window.location.protocol === "http:") {
+				copyToClipboard(formattedEmail);
+			  } else {
+			  navigator.clipboard.writeText(formattedEmail);
+			  alert("HTTPS Copied: " + formattedEmail);}
+			// or HTTPS compatible one
+		  
+		  // cookie memory here
+		  document.cookie = "textInputValue=" + domain + "; expires=Fri, 31 Dec 9999 23:59:59 GMT"; // Cookie expires far in the future
+		}
+
+
+    // Function to copy text to clipboard
+    function copyToClipboard(text) {
+      var textarea = document.createElement("textarea");
+      textarea.value = text;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+      alert("HTTP Copied to clipboard!");
+    }
+	
+        // Function to format the email
+        function formatEmail(fullname, domain) {
+            // Split fullname into name and lastname
+            let [name, lastname] = fullname.split(" ");
+
+            // Replace spaces with dots
+            let formattedName = name.replace(/\s/g, '.');
+            let formattedLastname = lastname.replace(/\s/g, '.');
+
+            // Replace special characters
+            formattedName = formattedName.replace(/[ąčęėįšųūž]/gi, function(match) {
+                switch(match.toLowerCase()) {
+                    case 'ą': return 'a';
+                    case 'č': return 'c';
+                    case 'ę': return 'e';
+                    case 'ė': return 'e';
+                    case 'į': return 'i';
+                    case 'š': return 's';
+                    case 'ų': return 'u';
+                    case 'ū': return 'u';
+                    case 'ž': return 'z';
+                    default: return match;
+                }
+            });
+
+            formattedLastname = formattedLastname.replace(/[ąčęėįšųūž]/gi, function(match) {
+                switch(match.toLowerCase()) {
+                    case 'ą': return 'a';
+                    case 'č': return 'c';
+                    case 'ę': return 'e';
+                    case 'ė': return 'e';
+                    case 'į': return 'i';
+                    case 'š': return 's';
+                    case 'ų': return 'u';
+                    case 'ū': return 'u';
+                    case 'ž': return 'z';
+                    default: return match;
+                }
+            });
+
+            // Combine name and lastname, add '@domain.com' at the end
+            let email = formattedName.toLowerCase() + '.' + formattedLastname.toLowerCase() + '@' + domain;
+            return email;
+        }
+
+        // Attach event listeners to input fields
+        document.getElementById("fullname").addEventListener("input", formatAndDisplay);
+        document.getElementById("domain").addEventListener("input", formatAndDisplay);
+
+    // Function to check if cookie exists and populate the text input
+    window.onload = function() {
+      var cookies = document.cookie.split("; ");
+      for (var i = 0; i < cookies.length; i++) {
+        var cookie = cookies[i].split("=");
+        if (cookie[0] === "textInputValue") {
+          document.getElementById("textInput").value = cookie[1];
+          break;
+        }
+      }
+    }
+	
+    </script>
+</body>
+</html>
