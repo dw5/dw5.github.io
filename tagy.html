@@ -100,16 +100,17 @@
         document.getElementById("domain").addEventListener("input", formatAndDisplay);
 
     // Function to check if cookie exists and populate the text input
-    window.onload = function() {
-      var cookies = document.cookie.split("; ");
-      for (var i = 0; i < cookies.length; i++) {
-        var cookie = cookies[i].split("=");
-        if (cookie[0] === "textInputValue") {
-          document.getElementById("textInput").value = cookie[1];
-          break;
-        }
-      }
-    }
+	document.addEventListener("DOMContentLoaded", function() {
+	  // Your existing code here
+	  var cookies = document.cookie.split("; ");
+	  for (var i = 0; i < cookies.length; i++) {
+		var cookie = cookies[i].split("=");
+		if (cookie[0] === "textInputValue") {
+		  document.getElementById("domain").value = cookie[1];
+		  break;
+		}
+	  }
+	});
 	
     </script>
 </body>
