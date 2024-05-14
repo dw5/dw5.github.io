@@ -14,6 +14,13 @@
   <br>
   <canvas id="qr-code"></canvas>
   <script>
+    document.querySelectorAll('#copyText span').forEach(item => {
+  item.addEventListener('click', function() {
+    var text = this.innerText.trim();
+	document.getElementById('text-input').value = text;
+  });
+});
+    
     function generateQRCode() {
       // Get the text to encode from the input field
       var text = document.getElementById("text-input").value;
