@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LAST4</title>
+</head>
+<body>
+    <label for="fTxtIN">INPUT:</label>
+    <input type="text" id="fTxtIN"><br><br>
+    <div>LAST4: <b id="output"></b> <button onclick="clipbrd()" style="margin-left: 18px;">Copy text</button></div>
+
+    <script>
+        // Function to format and display the email
+        function formatAndDisplay() {
+  var inputText = document.getElementById('fTxtIN').value;
+  var lastFourChars = inputText.substring(inputText.length - 4);
+ // document.getElementById('outputDiv').textContent = lastFourChars;
+            document.getElementById("output").innerText = lastFourChars;
+        }
+
+		function clipbrd() {
+		  let formattedEmail = document.getElementById("output").value;
+
+			// Check if the protocol is HTTP
+			  if (window.location.protocol === "http:") {
+				copyToClipboard(formattedEmail);
+			  } else {
+			  navigator.clipboard.writeText(formattedEmail);
+			  alert("HTTPS Copied: " + formattedEmail);}
+			// or HTTPS compatible one
+
+		}
+
+
+    // Function to copy text to clipboard
+    function copyToClipboard(text) {
+      var textarea = document.createElement("textarea");
+      textarea.value = text;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+      alert("HTTP Copied to clipboard!");
+    }
+        // Attach event listeners to input fields
+        document.getElementById("fTxtIN").addEventListener("input", formatAndDisplay);
+	
+    </script>
+</body>
+</html>
