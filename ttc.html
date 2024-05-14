@@ -18,6 +18,8 @@
   item.addEventListener('click', function() {
     var text = this.innerText.trim();
 	document.getElementById('text-input').value = text;
+	generateQRCode();
+	  //maybe clipboard here too
   });
 });
     
