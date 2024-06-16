@@ -6,6 +6,8 @@
     <title>LAST4</title>
 </head>
 <body>
+    <label for="fhowmanylast">howmanylast:</label>
+    <input type="number" id="fhowmanylast" value="4"><br><br>
     <label for="fTxtIN">INPUT:</label>
     <input type="text" id="fTxtIN"><br><br>
     <div>LAST4: <b id="output"></b> <button onclick="clipbrd()" style="margin-left: 18px;">Copy text</button></div>
@@ -13,39 +15,45 @@
     <script>
         // Function to format and display the email
         function formatAndDisplay() {
-  var inputText = document.getElementById('fTxtIN').value;
-  var lastFourChars = inputText.substring(inputText.length - 4);
- // document.getElementById('outputDiv').textContent = lastFourChars;
-            document.getElementById("output").innerText = lastFourChars;
+            var inputText = document.getElementById('fTxtIN').value;
+            var gethowmanylast = parseInt(document.getElementById('fhowmanylast').value);
+            if (isNaN(gethowmanylast) || gethowmanylast < 0) {
+                gethowmanylast = 0;
+            }
+            var lastChars = inputText.substring(inputText.length - gethowmanylast);
+            document.getElementById("output").innerText = lastChars;
         }
 
-		function clipbrd() {
-		  let formattedEmail = document.getElementById("output").value;
+        function clipbrd() {
+            let formattedText = document.getElementById("output").innerText;
 
-			// Check if the protocol is HTTP
-			  if (window.location.protocol === "http:") {
-				copyToClipboard(formattedEmail);
-			  } else {
-			  navigator.clipboard.writeText(formattedEmail);
-			  alert("HTTPS Copied: " + formattedEmail);}
-			// or HTTPS compatible one
+            if (window.location.protocol === "http:") {
+                copyToClipboard(formattedText);
+            } else if (navigator.clipboard) {
+                navigator.clipboard.writeText(formattedText).then(function() {
+                    alert("HTTPS Copied: " + formattedText);
+                }).catch(function(error) {
+                    console.error("Error copying text: ", error);
+                });
+            } else {
+                copyToClipboard(formattedText);
+            }
+        }
 
-		}
+        // Function to copy text to clipboard
+        function copyToClipboard(text) {
+            var textarea = document.createElement("textarea");
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand("copy");
+            document.body.removeChild(textarea);
+            alert("HTTP Copied to clipboard!");
+        }
 
-
-    // Function to copy text to clipboard
-    function copyToClipboard(text) {
-      var textarea = document.createElement("textarea");
-      textarea.value = text;
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand("copy");
-      document.body.removeChild(textarea);
-      alert("HTTP Copied to clipboard!");
-    }
         // Attach event listeners to input fields
         document.getElementById("fTxtIN").addEventListener("input", formatAndDisplay);
-	
+        document.getElementById("fhowmanylast").addEventListener("input", formatAndDisplay);
     </script>
 </body>
 </html>
