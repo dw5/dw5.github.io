@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Drag and Drop / Paste File Preview</title>
+    <title>Drag and Drop + Paste</title>
     <style>
         #drop-zone {
             border: 2px dashed #ccc;
@@ -32,8 +32,9 @@
             border: 1px solid #ccc;
             border-radius: 5px;
             padding: 5px;
+            cursor: pointer;
         }
-        .preview-wrapper img {
+        .preview-wrapper img, .preview-wrapper video {
             max-width: 100px;
             max-height: 100px;
         }
@@ -51,15 +52,53 @@
             border: none;
             border-radius: 50%;
             cursor: pointer;
+			padding: 5px 10px;
         }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            max-width: 80%;
+            max-height: 80%;
+            overflow: auto;
+			position: relative;
+        }
+		.close-btn {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: red;
+            color: white;
+            border: none;
+            /*border-radius: 50%;*/
+            cursor: pointer;
+            padding: 5px 10px;
+        }
+		pre{overflow: auto;}
     </style>
 </head>
 <body>
     <div id="drop-zone">Drag & Drop or Paste Files Here</div>
     <div id="preview-container" class="preview-container"></div>
+    <div id="modal" class="modal">
+        <div class="modal-content"><button class="remove-btn">×</button></div>
+    </div>
     <script>document.addEventListener('DOMContentLoaded', function() {
     const dropZone = document.getElementById('drop-zone');
     const previewContainer = document.getElementById('preview-container');
+    const modal = document.getElementById('modal');
+    const modalContent = document.querySelector('.modal-content');
 
     dropZone.addEventListener('dragover', function(e) {
         e.preventDefault();
@@ -82,10 +121,20 @@
 
     document.addEventListener('paste', function(e) {
         const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+        let hasFile = false;
         for (let i = 0; i < items.length; i++) {
             if (items[i].kind === 'file') {
                 const file = items[i].getAsFile();
                 handleFiles([file]);
+                hasFile = true;
+            }
+        }
+        if (!hasFile) {
+            const text = e.clipboardData.getData('text');
+            if (text) {
+                const fileName = `txt_${Date.now()}.txt`;
+                const file = new Blob([text], { type: 'text/plain' });
+                handleFiles([new File([file], fileName)]);
             }
         }
     });
@@ -94,11 +143,13 @@
         Array.from(files).forEach(file => {
             const previewWrapper = document.createElement('div');
             previewWrapper.className = 'preview-wrapper';
+            previewWrapper.addEventListener('click', () => openModal(file));
 
             const removeBtn = document.createElement('button');
             removeBtn.textContent = '×';
             removeBtn.className = 'remove-btn';
-            removeBtn.addEventListener('click', () => {
+            removeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
                 previewContainer.removeChild(previewWrapper);
             });
 
@@ -107,23 +158,74 @@
                 reader.onload = function(e) {
                     const img = document.createElement('img');
                     img.src = e.target.result;
-
                     previewWrapper.appendChild(img);
                     previewWrapper.appendChild(removeBtn);
                     previewContainer.appendChild(previewWrapper);
                 };
                 reader.readAsDataURL(file);
-            } else {
+            }/*else if (file.type.startsWith('video/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const video = document.createElement('video');
+                    video.src = e.target.result;
+                    video.controls = true;
+                    previewWrapper.appendChild(video);
+                    previewWrapper.appendChild(removeBtn);
+                    previewContainer.appendChild(previewWrapper);
+                };
+                reader.readAsDataURL(file);
+            }*/ else {
                 const filename = document.createElement('div');
                 filename.className = 'filename';
                 filename.textContent = file.name;
-
                 previewWrapper.appendChild(filename);
                 previewWrapper.appendChild(removeBtn);
                 previewContainer.appendChild(previewWrapper);
             }
         });
     }
+
+    function openModal(file) {
+        modalContent.innerHTML = '<button class="close-btn">×</button>';
+        if (file.type.startsWith('image/')) {
+            const img = document.createElement('img');
+            img.src = URL.createObjectURL(file);
+            img.style.maxWidth = '100%';
+            img.style.maxHeight = '100%';
+            modalContent.appendChild(img);
+        } else if (file.type.startsWith('video/')) {
+            const video = document.createElement('video');
+            video.src = URL.createObjectURL(file);
+            video.controls = true;
+            video.style.maxWidth = '100%';
+            video.style.maxHeight = '100%';
+            modalContent.appendChild(video);
+        } else if (file.type.startsWith('audio/')) {
+            const audio = document.createElement('audio');
+            audio.src = URL.createObjectURL(file);
+            audio.controls = true;
+            audio.style.maxWidth = '100%';
+            audio.style.maxHeight = '100%';
+            modalContent.appendChild(audio);
+        } else if (file.type.startsWith('application/')) {
+                const text = document.createElement('pre');
+                text.textContent = "format preview unsupported/not implemented: \n"+file.type;
+                modalContent.appendChild(text);
+        } else {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = document.createElement('pre');
+                text.textContent = e.target.result;
+                modalContent.appendChild(text);
+            };
+            reader.readAsText(file);
+        }
+        modal.style.display = 'flex';
+    }
+
+    modal.addEventListener('click', () => {
+        modal.style.display = 'none';
+    });
 });
 </script>
 </body>
