@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drag and Drop / Paste File Preview</title>
+    <style>
+        #drop-zone {
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            width: 300px;
+            height: 200px;
+            text-align: center;
+            line-height: 200px;
+            color: #aaa;
+            margin: 20px auto;
+        }
+        .preview-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 20px auto;
+            max-width: 300px;
+        }
+        .preview-wrapper {
+            position: relative;
+            margin: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 5px;
+        }
+        .preview-wrapper img {
+            max-width: 100px;
+            max-height: 100px;
+        }
+        .preview-wrapper .filename {
+            padding: 10px;
+            text-align: center;
+            color: #333;
+        }
+        .remove-btn {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: red;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="drop-zone">Drag & Drop or Paste Files Here</div>
+    <div id="preview-container" class="preview-container"></div>
+    <script>document.addEventListener('DOMContentLoaded', function() {
+    const dropZone = document.getElementById('drop-zone');
+    const previewContainer = document.getElementById('preview-container');
+
+    dropZone.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.style.borderColor = '#000';
+    });
+
+    dropZone.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.style.borderColor = '#ccc';
+    });
+
+    dropZone.addEventListener('drop', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.style.borderColor = '#ccc';
+        handleFiles(e.dataTransfer.files);
+    });
+
+    document.addEventListener('paste', function(e) {
+        const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].kind === 'file') {
+                const file = items[i].getAsFile();
+                handleFiles([file]);
+            }
+        }
+    });
+
+    function handleFiles(files) {
+        Array.from(files).forEach(file => {
+            const previewWrapper = document.createElement('div');
+            previewWrapper.className = 'preview-wrapper';
+
+            const removeBtn = document.createElement('button');
+            removeBtn.textContent = '×';
+            removeBtn.className = 'remove-btn';
+            removeBtn.addEventListener('click', () => {
+                previewContainer.removeChild(previewWrapper);
+            });
+
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+
+                    previewWrapper.appendChild(img);
+                    previewWrapper.appendChild(removeBtn);
+                    previewContainer.appendChild(previewWrapper);
+                };
+                reader.readAsDataURL(file);
+            } else {
+                const filename = document.createElement('div');
+                filename.className = 'filename';
+                filename.textContent = file.name;
+
+                previewWrapper.appendChild(filename);
+                previewWrapper.appendChild(removeBtn);
+                previewContainer.appendChild(previewWrapper);
+            }
+        });
+    }
+});
+</script>
+</body>
+</html>
