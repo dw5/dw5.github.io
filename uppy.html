@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<button class="upload-button" id="upload-button">upload</button>
     <title>Drag and Drop + Paste</title>
     <style>
         #drop-zone {
@@ -158,6 +159,7 @@
                 reader.onload = function(e) {
                     const img = document.createElement('img');
                     img.src = e.target.result;
+                    img.alt = file.name;
                     previewWrapper.appendChild(img);
                     previewWrapper.appendChild(removeBtn);
                     previewContainer.appendChild(previewWrapper);
@@ -207,6 +209,14 @@
             audio.style.maxWidth = '100%';
             audio.style.maxHeight = '100%';
             modalContent.appendChild(audio);
+        } else if (file.type.startsWith('application/json')) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = document.createElement('pre');
+                text.textContent = e.target.result;
+                modalContent.appendChild(text);
+            };
+            reader.readAsText(file);
         } else if (file.type.startsWith('application/')) {
                 const text = document.createElement('pre');
                 text.textContent = "format preview unsupported/not implemented: \n"+file.type;
@@ -226,6 +236,16 @@
     modal.addEventListener('click', () => {
         modal.style.display = 'none';
     });
+	
+	// Upload button functionality
+	const uploadButton = document.getElementById('upload-button');
+		uploadButton.addEventListener('click', function() {
+        const files = Array.from(previewContainer.querySelectorAll('.preview-wrapper'));
+
+        // Assuming you have a CSRF token and the endpoint URL
+        const csrfToken = 'UfmvXgnNPL';
+        const uploadUrl = 'http://localhost:8000/';
+	});
 });
 </script>
 </body>
