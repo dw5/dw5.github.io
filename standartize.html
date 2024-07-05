@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Date Formatter</title>
+<style>
+.months-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.month-row {
+    display: flex;
+    justify-content: space-between;
+    background-color: #ffffff;
+    padding: 10px;
+    border: 1px solid #cccccc;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.month-english, .month-number, .month-lithuanian {
+    flex: 1;
+    text-align: center;
+}
+
+.month-english {
+    text-align: left;
+}
+
+.month-lithuanian {
+    text-align: right;
+}
+</style>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const inputField = document.getElementById("dateInput");
+        const outputField = document.getElementById("dateOutput");
+        const copyButton = document.getElementById("copyButton");
+        const ccAlert = (message) => alert(message);
+
+		const Month2robots  = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"];
+        const monthNamesEnglish = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        const monthNamesLithuanian = ["Sausio", "Vasario", "Kovo", "Balandžio", "Gegužės", "Birželio", "Liepos", "Rugpjūčio", "Rugsėjo", "Spalio", "Lapkričio", "Gruodžio"];
+
+        const formatDateString = (dateString) => {
+            let day, month, year;
+
+            dateString = dateString.replace(",", "");
+            const parts = dateString.split(" ");
+
+            if (parts.length === 3) {
+                if (isNaN(parts[0])) {
+                    month = parts[0];
+                    day = parts[1];
+                    year = parts[2];
+                } else if (isNaN(parts[1])) {
+                    day = parts[0];
+                    month = parts[1];
+                    year = parts[2];
+                } else if (isNaN(parts[2])) {
+                    year = parts[0];
+                    month = parts[1];
+                    day = parts[2];
+                }
+            } else if (parts.length === 2) {
+                day = parts[0];
+                month = parts[1].split(" ")[0];
+                year = parts[1].split(" ")[1];
+            } else {
+                return "Invalid Date Format";
+            }
+
+            const monthIndexEnglish = monthNamesEnglish.indexOf(month);
+            const monthIndexLithuanian = monthNamesLithuanian.indexOf(month);
+
+            if (monthIndexEnglish !== -1) {
+                month = monthIndexEnglish + 1;
+            } else if (monthIndexLithuanian !== -1) {
+                month = monthIndexLithuanian + 1;
+            } else {
+                return "Invalid Month Name";
+            }
+
+            day = day.padStart(2, "0");
+            month = month.toString().padStart(2, "0");
+
+            return `${year}-${month}-${day}`;
+        };
+
+        inputField.addEventListener("input", () => {
+            const formattedDate = formatDateString(inputField.value);
+            outputField.textContent = formattedDate;
+        });
+
+        copyButton.addEventListener("click", () => {
+		    const formattedDate = formatDateString(inputField.value); //if there is input but js didn't react (like page reload)
+            outputField.textContent = formattedDate; //if there is input but js didn't react (like page reload)
+			
+            const text = outputField.textContent;
+
+            if (window.location.protocol === "http:") {
+                const textarea = document.createElement("textarea");
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand("copy");
+                document.body.removeChild(textarea);
+                ccAlert("HTTP Copied: " + text);
+            } else {
+                navigator.clipboard.writeText(text).then(() => {
+                    ccAlert("HTTPS Copied: " + text);
+                }, (err) => {
+                    ccAlert("Failed to copy: " + err);
+                });
+            }
+        });
+    });
+</script>
+</head>
+<body>
+<div style="display:flex;gap: 16px;">
+<div>
+    <div>
+        <label for="dateInput">Enter date:</label>
+        <input type="text" id="dateInput" placeholder="e.g., April 4, 2004">
+    </div>
+    <div>
+        <label>Formatted date:</label>
+        <pre><span id="dateOutput"></span></pre>
+        <button id="copyButton" style="padding: 20px;width: 100%;">Copy</button>
+    </div>
+</div>
+    <div class="months-container">
+        <div class="month-row">
+            <div class="month-english">January</div>
+            <div class="month-number">1</div>
+            <div class="month-lithuanian">Sausio</div>
+        </div>
+        <div class="month-row">
+            <div class="month-english">February</div>
+            <div class="month-number">2</div>
+            <div class="month-lithuanian">Vasario</div>
+        </div>
+        <div class="month-row">
+            <div class="month-english">March</div>
+            <div class="month-number">3</div>
+            <div class="month-lithuanian">Kovo</div>
+        </div>
+        <div class="month-row">
+            <div class="month-english">April</div>
+            <div class="month-number">4</div>
+            <div class="month-lithuanian">Balandžio</div>
+        </div>
+        <div class="month-row">
+            <div class="month-english">May</div>
+            <div class="month-number">5</div>
+            <div class="month-lithuanian">Gegužės</div>
+        </div>
+        <div class="month-row">
+            <div class="month-english">June</div>
+            <div class="month-number">6</div>
+            <div class="month-lithuanian">Birželio</div>
+        </div>
+        <div class="month-row">
+            <div class="month-english">July</div>
+            <div class="month-number">7</div>
+            <div class="month-lithuanian">Liepos</div>
+        </div>
+        <div class="month-row">
+            <div class="month-english">August</div>
+            <div class="month-number">8</div>
+            <div class="month-lithuanian">Rugpjūčio</div>
+        </div>
+        <div class="month-row">
+            <div class="month-english">September</div>
+            <div class="month-number">9</div>
+            <div class="month-lithuanian">Rugsėjo</div>
+        </div>
+        <div class="month-row">
+            <div class="month-english">October</div>
+            <div class="month-number">10</div>
+            <div class="month-lithuanian">Spalio</div>
+        </div>
+        <div class="month-row">
+            <div class="month-english">November</div>
+            <div class="month-number">11</div>
+            <div class="month-lithuanian">Lapkričio</div>
+        </div>
+        <div class="month-row">
+            <div class="month-english">December</div>
+            <div class="month-number">12</div>
+            <div class="month-lithuanian">Gruodžio</div>
+        </div>
+	</div>
+</body>
+</html>

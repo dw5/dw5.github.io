@@ -4,9 +4,6 @@
   <title>QR Code Generator</title>
 </head>
 <body>
-  <pre id="copyText">
-    <span>explorer http://ddg.gg</span>
-  </pre>
   <h1>QR Code Generator</h1>
   <p>Enter the text you want to encode in the QR code:</p>
   <textarea id="text-input" oninput="generateQRCode()"></textarea>
@@ -14,15 +11,6 @@
   <br>
   <canvas id="qr-code"></canvas>
   <script>
-    document.querySelectorAll('#copyText span').forEach(item => {
-  item.addEventListener('click', function() {
-    var text = this.innerText.trim();
-	document.getElementById('text-input').value = text;
-	generateQRCode();
-	  //maybe clipboard here too
-  });
-});
-    
     function generateQRCode() {
       // Get the text to encode from the input field
       var text = document.getElementById("text-input").value;
