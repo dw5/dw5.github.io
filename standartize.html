@@ -6,32 +6,28 @@
 <title>Date Formatter</title>
 <style>
 .months-container {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    /*margin: 0 auto;*/
+    max-width: 600px;
 }
 
-.month-row {
-    display: flex;
-    justify-content: space-between;
-    background-color: #ffffff;
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th, td {
     padding: 10px;
-    border: 1px solid #cccccc;
-    border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.month-english, .month-number, .month-lithuanian {
-    flex: 1;
     text-align: center;
+    border: 1px solid #cccccc;
 }
 
-.month-english {
-    text-align: left;
+th {
+    background-color: #f2f2f2;
 }
 
-.month-lithuanian {
-    text-align: right;
+td {
+    background-color: #ffffff;
 }
 </style>
 <script>
@@ -134,66 +130,73 @@
     </div>
 </div>
     <div class="months-container">
-        <div class="month-row">
-            <div class="month-english">January</div>
-            <div class="month-number">1</div>
-            <div class="month-lithuanian">Sausio</div>
-        </div>
-        <div class="month-row">
-            <div class="month-english">February</div>
-            <div class="month-number">2</div>
-            <div class="month-lithuanian">Vasario</div>
-        </div>
-        <div class="month-row">
-            <div class="month-english">March</div>
-            <div class="month-number">3</div>
-            <div class="month-lithuanian">Kovo</div>
-        </div>
-        <div class="month-row">
-            <div class="month-english">April</div>
-            <div class="month-number">4</div>
-            <div class="month-lithuanian">Balandžio</div>
-        </div>
-        <div class="month-row">
-            <div class="month-english">May</div>
-            <div class="month-number">5</div>
-            <div class="month-lithuanian">Gegužės</div>
-        </div>
-        <div class="month-row">
-            <div class="month-english">June</div>
-            <div class="month-number">6</div>
-            <div class="month-lithuanian">Birželio</div>
-        </div>
-        <div class="month-row">
-            <div class="month-english">July</div>
-            <div class="month-number">7</div>
-            <div class="month-lithuanian">Liepos</div>
-        </div>
-        <div class="month-row">
-            <div class="month-english">August</div>
-            <div class="month-number">8</div>
-            <div class="month-lithuanian">Rugpjūčio</div>
-        </div>
-        <div class="month-row">
-            <div class="month-english">September</div>
-            <div class="month-number">9</div>
-            <div class="month-lithuanian">Rugsėjo</div>
-        </div>
-        <div class="month-row">
-            <div class="month-english">October</div>
-            <div class="month-number">10</div>
-            <div class="month-lithuanian">Spalio</div>
-        </div>
-        <div class="month-row">
-            <div class="month-english">November</div>
-            <div class="month-number">11</div>
-            <div class="month-lithuanian">Lapkričio</div>
-        </div>
-        <div class="month-row">
-            <div class="month-english">December</div>
-            <div class="month-number">12</div>
-            <div class="month-lithuanian">Gruodžio</div>
-        </div>
-	</div>
+        <table>
+            <tr>
+                <th>English</th>
+                <th>Number</th>
+                <th>Lithuanian</th>
+            </tr>
+            <tr>
+                <td>January</td>
+                <td>1</td>
+                <td>Sausio</td>
+            </tr>
+            <tr>
+                <td>February</td>
+                <td>2</td>
+                <td>Vasario</td>
+            </tr>
+            <tr>
+                <td>March</td>
+                <td>3</td>
+                <td>Kovo</td>
+            </tr>
+            <tr>
+                <td>April</td>
+                <td>4</td>
+                <td>Balandžio</td>
+            </tr>
+            <tr>
+                <td>May</td>
+                <td>5</td>
+                <td>Gegužės</td>
+            </tr>
+            <tr>
+                <td>June</td>
+                <td>6</td>
+                <td>Birželio</td>
+            </tr>
+            <tr>
+                <td>July</td>
+                <td>7</td>
+                <td>Liepos</td>
+            </tr>
+            <tr>
+                <td>August</td>
+                <td>8</td>
+                <td>Rugpjūčio</td>
+            </tr>
+            <tr>
+                <td>September</td>
+                <td>9</td>
+                <td>Rugsėjo</td>
+            </tr>
+            <tr>
+                <td>October</td>
+                <td>10</td>
+                <td>Spalio</td>
+            </tr>
+            <tr>
+                <td>November</td>
+                <td>11</td>
+                <td>Lapkričio</td>
+            </tr>
+            <tr>
+                <td>December</td>
+                <td>12</td>
+                <td>Gruodžio</td>
+            </tr>
+        </table>
+    </div>
 </body>
 </html>
