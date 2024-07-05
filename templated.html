@@ -50,8 +50,6 @@
     <label for="delegatedEmail">Delegated_Email:</label>
     <input type="email" id="delegatedEmail">
 </div>
-<button id="generateButton">Generate Text</button>
-
 <div id="output"></div>
 <button id="copyButton">Copy Text</button>
 
@@ -59,10 +57,19 @@
     const template1 = "Hello [Name_Surname],\nYour request has been processed successfully.";
     const template2 = "Hello [Name_Surname],\nYour request has been processed successfully. Please contact [Delegated_Name_Surname] at [Delegated_Email] for further assistance.";
 
-    document.getElementById('generateButton').addEventListener('click', () => {
-        const nameSurname = document.getElementById('nameSurname').value;
-        const delegatedNameSurname = document.getElementById('delegatedNameSurname').value;
-        const delegatedEmail = document.getElementById('delegatedEmail').value;
+    const nameSurnameInput = document.getElementById('nameSurname');
+    const delegatedNameSurnameInput = document.getElementById('delegatedNameSurname');
+    const delegatedEmailInput = document.getElementById('delegatedEmail');
+    const output = document.getElementById('output');
+    
+    function formatName(name) {
+        return name.replace(/\b\w/g, char => char.toUpperCase());
+    }
+    
+    function generateText() {
+        const nameSurname = formatName(nameSurnameInput.value);
+        const delegatedNameSurname = formatName(delegatedNameSurnameInput.value);
+        const delegatedEmail = delegatedEmailInput.value.toLowerCase();
 
         let outputText = template1.replace("[Name_Surname]", nameSurname);
 
@@ -73,12 +80,16 @@
                 .replace("[Delegated_Email]", delegatedEmail);
         }
 
-        document.getElementById('output').textContent = outputText;
-    });
+        output.textContent = outputText;
+    }
+
+    nameSurnameInput.addEventListener("input", generateText);
+    delegatedNameSurnameInput.addEventListener("input", generateText);
+    delegatedEmailInput.addEventListener("input", generateText);
 
     document.getElementById('copyButton').addEventListener('click', () => {
-        const outputText = document.getElementById('output').textContent;
-        
+        const outputText = output.textContent;
+
         if (window.location.protocol === "http:") {
             const textarea = document.createElement("textarea");
             textarea.value = outputText;
