@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Obscure/Deobscure Tool</title>
+    <script src="https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.min.js"></script>
+</head>
+<body>
+    <h2>Password Obscure/Deobscure Tool</h2>
+    <div>
+        <h3>Obscure (Encrypt)</h3>
+        <label for="plain-text">Plain Text Password:</label>
+        <input type="text" id="plain-text">
+        <button onclick="obscurePassword()">Obscure</button>
+        <p id="obscured-result"></p>
+    </div>
+    <div>
+        <h3>Deobscure (Decrypt)</h3>
+        <label for="obscured-text">Obscured Password:</label>
+        <input type="text" id="obscured-text">
+        <button onclick="deobscurePassword()">Deobscure</button>
+        <p id="deobscured-result"></p>
+    </div>
+
+    <script>
+        const secretKey = CryptoJS.enc.Hex.parse('9c935b48730a554d6bfd7c63c886a92bd390198eb8128afbf4de162b8b95f638');
+        const blockSize = 16;
+
+        function base64UrlSafeEncode(wordArray) {
+            return CryptoJS.enc.Base64.stringify(wordArray).replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
+        }
+
+        function base64UrlSafeDecode(base64Str) {
+            base64Str = base64Str.replace(/-/g, '+').replace(/_/g, '/');
+            switch (base64Str.length % 4) {
+                case 2: base64Str += '=='; break;
+                case 3: base64Str += '='; break;
+            }
+            return CryptoJS.enc.Base64.parse(base64Str);
+        }
+
+        function obscurePassword() {
+            const plainText = document.getElementById('plain-text').value;
+            const iv = CryptoJS.lib.WordArray.random(blockSize);
+            const encrypted = CryptoJS.AES.encrypt(CryptoJS.enc.Utf8.parse(plainText), secretKey, { iv: iv, mode: CryptoJS.mode.CTR, padding: CryptoJS.pad.NoPadding });
+            const obscured = base64UrlSafeEncode(iv.concat(encrypted.ciphertext));
+            document.getElementById('obscured-result').textContent = `Obscured Password: ${obscured}`;
+        }
+
+        function deobscurePassword() {
+            const obscuredText = document.getElementById('obscured-text').value;
+            const encryptedData = base64UrlSafeDecode(obscuredText);
+            const iv = CryptoJS.lib.WordArray.create(encryptedData.words.slice(0, blockSize / 4));
+            const ciphertext = CryptoJS.lib.WordArray.create(encryptedData.words.slice(blockSize / 4));
+            const decrypted = CryptoJS.AES.decrypt({ ciphertext: ciphertext }, secretKey, { iv: iv, mode: CryptoJS.mode.CTR, padding: CryptoJS.pad.NoPadding });
+            document.getElementById('deobscured-result').textContent = `Deobscured Password: ${decrypted.toString(CryptoJS.enc.Utf8)}`;
+        }
+    </script>
+</body>
+</html>
