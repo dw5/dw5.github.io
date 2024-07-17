@@ -56,6 +56,8 @@ gap:8px;
 <pre>mkdir recoded    & mogrify -format jpg -path ./recoded *.png</pre>
 <pre>mkdir avif    & mogrify -format avif -path ./avif *.png</pre>
 <pre>mkdir recodedvid && FOR %y IN (*.webm) DO @ffmpeg -i "%y" "./recodedvid/%y-recoded.mp4"</pre>
+<pre>git log --pretty=format:"%h %an %ad %s" --date=iso</pre>
+<pre>git log --pretty=format:"%h %an %ad %s" --date=iso-strict</pre>
 </pre>
 </details>
 
