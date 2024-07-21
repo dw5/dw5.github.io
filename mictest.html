@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Microphone Tester</title>
+</head>
+<body>
+    <h1>Microphone Tester</h1>
+    <button id="startButton">Start</button>
+    <button id="stopButton" disabled>Stop</button>
+    <script>
+        const startButton = document.getElementById('startButton');
+        const stopButton = document.getElementById('stopButton');
+        let audioContext;
+        let microphone;
+        let sourceNode;
+
+        startButton.addEventListener('click', async () => {
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                microphone = audioContext.createMediaStreamSource(stream);
+                sourceNode = audioContext.createGain();
+                microphone.connect(sourceNode);
+                sourceNode.connect(audioContext.destination);
+                startButton.disabled = true;
+                stopButton.disabled = false;
+            } catch (error) {
+                console.error('Error accessing the microphone', error);
+            }
+        });
+
+        stopButton.addEventListener('click', () => {
+            if (microphone && audioContext) {
+                microphone.disconnect();
+                audioContext.close();
+            }
+            startButton.disabled = false;
+            stopButton.disabled = true;
+        });
+    </script>
+</body>
+</html>
