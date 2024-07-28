@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAID Needs Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>RAID Needs Calculator</h1>
+        <label for="totalStorage">Total Storage Needed (TB):</label>
+        <input type="number" id="totalStorage" min="0" step="0.1" required><br><br>
+
+        <label for="priority">Priority:</label>
+        <select id="priority">
+            <option value="storage">Maximize Storage</option>
+            <option value="performance">Best Performance</option>
+            <option value="reliability">Reliability (Redundancy)</option>
+        </select><br><br>
+
+        <button onclick="calculateRAID()">Calculate</button>
+
+        <div class="result" id="result"></div>
+
+        <div class="explainers" id="explainers">
+            <h2>RAID Level Explainers</h2>
+            <ul>
+                <li><strong>RAID 0:</strong> Striping.<br>Best for performance, no redundancy.<br>Use case: High-speed data access where data loss is not critical.</li>
+                <li><strong>RAID 1:</strong> Mirroring.<br>Best for redundancy, but only half the storage capacity.<br>Use case: Critical data that needs to be available even if a drive fails.</li>
+                <li><strong>* RAID 5:</strong> Striping with Parity.<br>Good balance of performance, storage capacity, and redundancy. Needs at least 3 drives.<br>Use case: General-purpose servers.</li>
+                <li><strong>* RAID 6:</strong> Striping with Double Parity.<br>Enhanced redundancy with the ability to withstand 2 drive failures. Needs at least 4 drives.<br>Use case: High-availability systems.</li>
+                <li><strong>RAID 10:</strong> Mirroring + Striping.<br>Combines performance and redundancy. Needs at least 4 drives.<br>Use case: High-performance databases.</li>
+            </ul>
+			
+			<h2>Examples:</h2>
+            <ul>
+                <li>If performance is the primary concern: Go with RAID 10. It will provide better performance, especially for tasks involving frequent access to multimedia files and projects.</li>
+                <li>If data protection and capacity are the primary concerns: Consider RAID 6. It will provide a good balance between storage capacity and fault tolerance, which is crucial when dealing with valuable multimedia projects.</li>
+            </ul>
+			
+			<h2>Additional suggestions:</h2>
+            <ul>
+                <li>Striping = data is distributed across all those drives, no storage wasted for parity data, data will be lost if 1 drive fails, good performance throughput</li>
+                <li>RAIDZ1 = One drive is used for parity data, if one drive fails, it can be rebuilt easily</li>
+                <li>RAIDZ2 (RAID6) = Two drives is used for parity data, if one drive fails, it can be rebuilt easily</li>
+                <li>RAID Spanning is a method of combining multiple hard drives to behave as a single large drive</li>
+                <li>JBOD = "Just a Bunch Of Disks"/"Just a Bunch Of Drives" is an architecture using multiple hard drives exposed as individual devices. </li>
+                <li>Use BTRFS or ZFS</li>
+				<li>TrueNAS</li>
+				<li>https://youtu.be/ykhaXo6m-04</li>
+				<li>https://youtu.be/_B2DDSPLufs</li>
+				<li>https://www.westerndigital.com/tools/raid-calculator</li>
+            </ul>
+			
+        </div>
+    </div>
+
+    <script>
+        function calculateRAID() {
+            const totalStorage = parseFloat(document.getElementById('totalStorage').value);
+            const priority = document.getElementById('priority').value;
+            let resultHTML = '';
+
+            if (isNaN(totalStorage) || totalStorage <= 0) {
+                document.getElementById('result').innerText = 'Please enter a valid total storage needed.';
+                return;
+            }
+
+            const raidConfigurations = [
+                { level: 'RAID 0', drives: 2, usableStorage: totalStorage, performance: 'High', redundancy: 'None', minDrives: 2 },
+                { level: 'RAID 1', drives: 2 * totalStorage, usableStorage: totalStorage, performance: 'Medium', redundancy: 'High', minDrives: 2 },
+                { level: 'RAID 5', drives: totalStorage + 1, usableStorage: totalStorage, performance: 'Medium', redundancy: 'Medium', minDrives: 3 },
+                { level: 'RAID 6', drives: totalStorage + 2, usableStorage: totalStorage, performance: 'Medium', redundancy: 'High', minDrives: 4 },
+                { level: 'RAID 10', drives: 2 * totalStorage, usableStorage: totalStorage, performance: 'High', redundancy: 'High', minDrives: 4 }
+            ];
+
+            raidConfigurations.forEach(config => {
+                if (priority === 'storage' && config.redundancy !== 'None') {
+                    config.usableStorage = config.level === 'RAID 0' ? totalStorage : totalStorage / 2;
+                }
+                if (priority === 'performance' && config.performance === 'High') {
+                    resultHTML += `<p>For ${config.level}, you need at least ${Math.ceil(config.drives)} drives for a usable storage of ${config.usableStorage} TB. <br><b>Performance: ${config.performance}, Redundancy: ${config.redundancy}</b></p>`;
+                }
+                if (priority === 'reliability' && config.redundancy === 'High') {
+                    resultHTML += `<p>For ${config.level}, you need at least ${Math.ceil(config.drives)} drives for a usable storage of ${config.usableStorage} TB. <br><b>Performance: ${config.performance}, Redundancy: ${config.redundancy}</b></p>`;
+                }
+                if (priority === 'storage' && config.redundancy !== 'None') {
+                    resultHTML += `<p>For ${config.level}, you need at least ${Math.ceil(config.drives)} drives for a usable storage of ${config.usableStorage} TB. <br><b>Performance: ${config.performance}, Redundancy: ${config.redundancy}</b></p>`;
+                }
+            });
+
+            document.getElementById('result').innerHTML = resultHTML;
+        }
+    </script>
+</body>
+</html>
