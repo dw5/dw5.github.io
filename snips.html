@@ -112,6 +112,32 @@ gap:8px;
 <pre>Get-ChildItem -Recurse | Group-Object Extension -NoElement</pre>
 </pre>
 </details>
+
+<details>
+<summary>js - allow pasting</summary>
+<pre id="copyText" style="border: dotted;">
+<pre>var sleep = (milliseconds) => {
+  return new Promise(resolve => setTimeout(resolve, milliseconds))
+}
+
+var waitTime = 1500; //ms
+
+//var x = $( "button:contains('Download')" );
+var x = $( "a:contains('Download')" );
+
+for(var i = 0; i < x.length ; i++)
+  {
+    (function(idx) {
+      // Wait needed because browser blocks network calls if you make too many too fast
+      sleep(i * waitTime).then(() => {
+    		x[idx].click();
+			});
+   	})(i)
+  }</pre>
+<pre>---</pre>
+</pre>
+</details>
+	
 </buckets>
 
   <h1>QR Code Generator</h1>
