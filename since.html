@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>How Long Since</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            margin: 0;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3 {
+            text-align: center;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        label {
+            margin-bottom: 10px;
+        }
+        input[type="date"] {
+            padding: 10px;
+            font-size: 16px;
+            margin-bottom: 10px;
+            width: 100%;
+            max-width: 300px;
+        }
+        #output {
+            margin-top: 20px;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        ul li {
+            padding: 5px 0;
+        }
+		.answd {
+		text-align: center;
+		font-size: 1.25rem;
+		}
+		.answm {
+		background-color: #effaf5;
+  border: 2px solid #37b37c;
+  color: #4a4a4a;
+  display: block;
+  font-size: 1.75rem;
+  margin: .75rem 0;
+  padding: 1.25rem 1.5rem;
+		}
+		.amini {
+		font-size: 1rem;}
+		
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>How Long Since</h1>
+        <form id="dateForm">
+            <label for="dateInput">Select a date:</label>
+            <input type="date" id="dateInput" name="dateInput">
+        </form>
+        <div id="output"></div>
+    </div>
+    <script>
+        function getDateFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            const dateStr = params.get('d');
+            if (dateStr) {
+                const date = new Date(dateStr);
+                if (!isNaN(date.getTime())) {
+                    return date;
+                }
+            }
+            return null;
+        }
+
+        function getDiff(date1, date2) {
+            var years = date2.getFullYear() - date1.getFullYear();
+            var months = date2.getMonth() - date1.getMonth();
+            var days = date2.getDate() - date1.getDate();
+
+            if (days < 0) {
+                months--;
+                var prevMonth = new Date(date2.getFullYear(), date2.getMonth(), 0);
+                days += prevMonth.getDate();
+            }
+
+            if (months < 0) {
+                years--;
+                months += 12;
+            }
+
+            return { years: years, months: months, days: days };
+        }
+
+        function calculateAndDisplay(date) {
+            const now = new Date();
+            const diffMs = now - date;
+            if (diffMs < 0) {
+                alert('Selected date is in the future');
+                return;
+            }
+
+            var diff = getDiff(date, now);
+
+            var totalYears = diffMs / (1000 * 60 * 60 * 24 * 365.25);
+            var totalMonths = diffMs / (1000 * 60 * 60 * 24 * (365.25/12));
+            var totalWeeks = diffMs / (1000 * 60 * 60 * 24 * 7);
+            var totalDays = diffMs / (1000 * 60 * 60 * 24);
+            var totalHours = diffMs / (1000 * 60 * 60);
+            var totalMinutes = diffMs / (1000 * 60);
+            var totalSeconds = diffMs / 1000;
+
+            var dateStr = date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+            var nowStr = now.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+
+            var output = '';
+
+            output += `<h2>How long since ${dateStr}?</h2>`;
+            output += `<div class="answd"><strong>Answer: </strong>There were <p class="answm">${diff.years} years, ${diff.months} months and ${diff.days} days</p> since ${dateStr}</div>`;
+            output += `<p class="answd amini">(<b>Today</b> (${nowStr}) is <b>${diff.years} years, ${diff.months} months and ${diff.days} days after ${dateStr})</b></p>`;
+
+            output += `<h3>It Is Also</h3>`;
+            output += `<ul>`;
+            output += `<li>${totalYears.toFixed(3)} Years</li>`;
+            output += `<li>or ${totalMonths.toFixed(3)} Months</li>`;
+            output += `<li>or ${totalWeeks.toFixed(3)} Weeks</li>`;
+            output += `<li>or ${Math.floor(totalDays)} Days</li>`;
+            output += `<li>or ${Math.floor(totalHours)} Hours</li>`;
+            output += `<li>or ${Math.floor(totalMinutes)} Minutes</li>`;
+            output += `<li>or ${Math.floor(totalSeconds)} Seconds</li>`;
+            output += `<li>or ${diff.years} years, ${diff.months} months and ${diff.days} days</li>`;
+            output += `</ul>`;
+
+            document.getElementById('output').innerHTML = output;
+        }
+
+        function updateUrlAndCalculate(date) {
+            const dateStr = date.toISOString().split('T')[0];
+            const newUrl = `${window.location.pathname}?d=${dateStr}`;
+            window.history.pushState({ path: newUrl }, '', newUrl);
+            calculateAndDisplay(date);
+        }
+
+        document.getElementById('dateInput').addEventListener('input', function() {
+            const dateStr = this.value;
+            if (dateStr) {
+                const date = new Date(dateStr);
+                if (!isNaN(date.getTime())) {
+                    updateUrlAndCalculate(date);
+                } else {
+                    alert('Invalid date');
+                }
+            }
+        });
+
+        window.onload = function() {
+            const date = getDateFromURL();
+            if (date) {
+                const dateInput = document.getElementById('dateInput');
+                const yyyyMmDd = date.toISOString().split('T')[0];
+                dateInput.value = yyyyMmDd;
+                calculateAndDisplay(date);
+            }
+        };
+    </script>
+</body>
+</html>
