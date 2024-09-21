@@ -24,9 +24,9 @@ gap:8px;
 <pre id="copyText" style="border: dotted;">
 <pre>yt-dlp -f mp4 -S res:360 -S res,vcodec:av1 </pre>
 <pre>yt-dlp -f -</pre>
-<pre>yt-dlp --merge-output-format mp4</pre>
-<pre>yt-dlp --cookies-from-browser firefox </pre>
-<pre>yt-dl --write-subs --write-auto-subs --embed-subs --write-thumbnail --write-description --write-info-json </pre>
+<pre>--merge-output-format mp4</pre>
+<pre>--cookies-from-browser firefox </pre>
+<pre>--write-subs --write-auto-subs --embed-subs --write-thumbnail --write-description --write-info-json </pre>
 </pre>
 </details>
 
@@ -96,6 +96,10 @@ gap:8px;
 <pre>ffmpeg -ss 00:20:50 -i "abc.mp4" abc.wav</pre>
 <a href="https://dw5.github.io/concat.html">ffmpeg concat builder</a>
 <pre>ffmpeg -f concat -safe 0 -i input.txt -c copy HWD.mp4</pre>
+<pre>-c:a libopus -c:v av1_qsv</pre>
+<pre>-vf scale=3840:2160</pre>
+<pre>-filter:a "volume=5.0" -c:a libopus -c:v copy</pre>
+<pre>ffmpeg -hwaccel qsv -i file -c:a libopus -c:v av1_qsv </pre>
 </pre>
 </details>
 
@@ -110,6 +114,19 @@ gap:8px;
 <pre>find . -type d -name ".thumbnails" -exec rm -r {} \;</pre>
 <small>filetypes in folder counter</small>
 <pre>Get-ChildItem -Recurse | Group-Object Extension -NoElement</pre>
+<small>AD</small>
+<pre>(Get-ADUser -filter *).count</pre>
+<pre>(Get-ADUser -filter * |Where {$_.enabled -eq "True"}).count</pre>
+<pre>(Get-ADGroupMember -Identity "IT Users").count</pre>
+<pre>Get-NetTcpConnection -State Listen | Select-Object LocalAddress,LocalPort| Sort-Object -Property LocalPort | Format-Table</pre>
+<small>ARCHIVE WHOLE SITE</small>
+<pre>wget -r -np -k</pre>
+<pre>wget --recursive --page-requisites --convert-links --no-parent -e robots=off --random-wait -w 20 -nc www.website.local</pre>
+<pre>rclone lsf . >> links.txt</pre>
+<pre>Get-ChildItem -Path "www.website.local" -Recurse | Select-Object -ExpandProperty FullName</pre>
+<pre>Get-ChildItem -Path "www.website.local" -Recurse | ForEach-Object { $_.FullName }</pre>
+<pre>Get-ChildItem -Path "www.website.local" -Filter *.html -Recurse | Select-Object -ExpandProperty FullName</pre>
+<pre>bash spn.sh -p 1 -w 60 links.txt</pre>
 </pre>
 </details>
 
