@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>How Long Since</title>
+    <title>How Long Since or Until</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         body {
@@ -46,27 +46,27 @@
         ul li {
             padding: 5px 0;
         }
-		.answd {
-		text-align: center;
-		font-size: 1.25rem;
-		}
-		.answm {
-		background-color: #effaf5;
-  border: 2px solid #37b37c;
-  color: #4a4a4a;
-  display: block;
-  font-size: 1.75rem;
-  margin: .75rem 0;
-  padding: 1.25rem 1.5rem;
-		}
-		.amini {
-		font-size: 1rem;}
-		
+        .answd {
+            text-align: center;
+            font-size: 1.25rem;
+        }
+        .answm {
+            background-color: #effaf5;
+            border: 2px solid #37b37c;
+            color: #4a4a4a;
+            display: block;
+            font-size: 1.75rem;
+            margin: .75rem 0;
+            padding: 1.25rem 1.5rem;
+        }
+        .amini {
+            font-size: 1rem;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>How Long Since</h1>
+        <h1>How Long Since or Until</h1>
         <form id="dateForm">
             <label for="dateInput">Select a date:</label>
             <input type="date" id="dateInput" name="dateInput">
@@ -107,30 +107,33 @@
 
         function calculateAndDisplay(date) {
             const now = new Date();
-            const diffMs = now - date;
-            if (diffMs < 0) {
-                alert('Selected date is in the future');
-                return;
-            }
+            const diffMs = date - now;
+            const isFuture = diffMs > 0;
 
-            var diff = getDiff(date, now);
+            var diff = getDiff(isFuture ? now : date, isFuture ? date : now);
 
-            var totalYears = diffMs / (1000 * 60 * 60 * 24 * 365.25);
-            var totalMonths = diffMs / (1000 * 60 * 60 * 24 * (365.25/12));
-            var totalWeeks = diffMs / (1000 * 60 * 60 * 24 * 7);
-            var totalDays = diffMs / (1000 * 60 * 60 * 24);
-            var totalHours = diffMs / (1000 * 60 * 60);
-            var totalMinutes = diffMs / (1000 * 60);
-            var totalSeconds = diffMs / 1000;
+            var totalYears = Math.abs(diffMs) / (1000 * 60 * 60 * 24 * 365.25);
+            var totalMonths = Math.abs(diffMs) / (1000 * 60 * 60 * 24 * (365.25/12));
+            var totalWeeks = Math.abs(diffMs) / (1000 * 60 * 60 * 24 * 7);
+            var totalDays = Math.abs(diffMs) / (1000 * 60 * 60 * 24);
+            var totalHours = Math.abs(diffMs) / (1000 * 60 * 60);
+            var totalMinutes = Math.abs(diffMs) / (1000 * 60);
+            var totalSeconds = Math.abs(diffMs) / 1000;
 
             var dateStr = date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
             var nowStr = now.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
 
             var output = '';
 
-            output += `<h2>How long since ${dateStr}?</h2>`;
-            output += `<div class="answd"><strong>Answer: </strong>There were <p class="answm">${diff.years} years, ${diff.months} months and ${diff.days} days</p> since ${dateStr}</div>`;
-            output += `<p class="answd amini">(<b>Today</b> (${nowStr}) is <b>${diff.years} years, ${diff.months} months and ${diff.days} days after ${dateStr})</b></p>`;
+            if (isFuture) {
+                output += `<h2>How long until ${dateStr}?</h2>`;
+                output += `<div class="answd"><strong>Answer: </strong>There are <p class="answm">${diff.years} years, ${diff.months} months and ${diff.days} days</p> until ${dateStr}</div>`;
+                output += `<p class="answd amini">(<b>Today</b> (${nowStr}) is <b>${diff.years} years, ${diff.months} months and ${diff.days} days before ${dateStr})</b></p>`;
+            } else {
+                output += `<h2>How long since ${dateStr}?</h2>`;
+                output += `<div class="answd"><strong>Answer: </strong>There were <p class="answm">${diff.years} years, ${diff.months} months and ${diff.days} days</p> since ${dateStr}</div>`;
+                output += `<p class="answd amini">(<b>Today</b> (${nowStr}) is <b>${diff.years} years, ${diff.months} months and ${diff.days} days after ${dateStr})</b></p>`;
+            }
 
             output += `<h3>It Is Also</h3>`;
             output += `<ul>`;
