@@ -49,14 +49,14 @@ gap:8px;
 <pre id="copyText" style="border: dotted;">
 <pre>mkdir recoded; mogrify -format jpg -path ./recoded *.png # turbo PNG2JPG (no alpha)</pre>
 <pre>mkdir recoded; mogrify -format avif -path ./recoded *.png # do in bg, slow PNG2AVIF (no alpha transperancy)</pre>
-<pre>mkdir avifaomff; for i in *.jpg; do ffmpeg -i "$i" -c:v libaom-av1 -still-picture 1 "./avifaomff/${i%.*}.avif"; done</pre>
-<pre>mkdir avifaomff; for i in *.png; do ffmpeg -i "$i" -c:v libaom-av1 -still-picture 1 "./avifaomff/${i%.*}.avif"; done</pre>
-<pre>mkdir avifaomff & FOR %y IN (*.jpg) DO @ffmpeg -i "%y" -c:v libaom-av1 -still-picture 1 "./avifaomff/%y.avif"</pre>
-<pre>mkdir avifaomff & FOR %y IN (*.png) DO @ffmpeg -i "%y" -c:v libaom-av1 -still-picture 1 "./avifaomff/%y.avif"</pre>
+<pre>mkdir avifaomff; for i in *.jpg; do  -i "$i" -c:v libaom-av1 -still-picture 1 "./avifaomff/${i%.*}.avif"; done</pre>
+<pre>mkdir avifaomff; for i in *.png; do  -i "$i" -c:v libaom-av1 -still-picture 1 "./avifaomff/${i%.*}.avif"; done</pre>
+<pre>mkdir avifaomff & FOR %y IN (*.jpg) DO @ -i "%y" -c:v libaom-av1 -still-picture 1 "./avifaomff/%y.avif"</pre>
+<pre>mkdir avifaomff & FOR %y IN (*.png) DO @ -i "%y" -c:v libaom-av1 -still-picture 1 "./avifaomff/%y.avif"</pre>
 <pre>jdupes -SrdN .</pre>
 <pre>mkdir recoded    & mogrify -format jpg -path ./recoded *.png</pre>
 <pre>mkdir avif    & mogrify -format avif -path ./avif *.png</pre>
-<pre>mkdir recodedvid && FOR %y IN (*.webm) DO @ffmpeg -i "%y" "./recodedvid/%y-recoded.mp4"</pre>
+<pre>mkdir recodedvid && FOR %y IN (*.webm) DO @ -i "%y" "./recodedvid/%y-recoded.mp4"</pre>
 <pre>git log --pretty=format:"%h %an %ad %s" --date=iso</pre>
 <pre>git log --pretty=format:"%h %an %ad %s" --date=iso-strict</pre>
 </pre>
@@ -100,6 +100,7 @@ gap:8px;
 <pre>-vf scale=3840:2160</pre>
 <pre>-filter:a "volume=5.0" -c:a libopus -c:v copy</pre>
 <pre>ffmpeg -hwaccel qsv -i file -c:a libopus -c:v av1_qsv </pre>
+<pre>ffenmass -i /home/ubuntu/src-voices-en -ext wav /home/ubuntu/out-voices-en-wav</pre>
 </pre>
 </details>
 
