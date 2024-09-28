@@ -101,6 +101,9 @@ gap:8px;
 <pre>-filter:a "volume=5.0" -c:a libopus -c:v copy</pre>
 <pre>ffmpeg -hwaccel qsv -i file -c:a libopus -c:v av1_qsv </pre>
 <pre>ffenmass -i /home/ubuntu/src-voices-en -ext wav /home/ubuntu/out-voices-en-wav</pre>
+<pre>-c:v copy-filter_complex "[0:a]pan=stereo|c0=c0|c1=c0[out]" -map 0:v -map "[out]" -c:v copy -c:a aac -b:a 192k output.mp4</pre>
+<pre>-filter_complex "[0:a]pan=stereo|c0=c0|c1=c0[out]" -map 0:v -map "[out]" -c:v copy -c:a aac -b:a 320k output.mp4</pre>
+<pre>-filter_complex "[0:a]pan=stereo|c0=c0|c1=c0[out]" -map 0:v -map "[out]" -c:v copy -c:a libopus -b:a 192k </pre>
 </pre>
 </details>
 
