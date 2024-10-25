@@ -263,11 +263,21 @@ function setTargetDetail(targetDetail) {
 }
 */
 
-document.getElementById('closeAllBtn').addEventListener('click', function() {
-            const details = document.querySelectorAll('details');
-            details.forEach(detail => {
-                detail.removeAttribute('open');
-            });
+const closeAllBtn = document.getElementById('closeAllBtn');
+closeAllBtn.addEventListener('click', function() {
+    const details = document.querySelectorAll('details');
+    const anyOpen = Array.from(details).some(detail => detail.hasAttribute('open'));
+
+    details.forEach(detail => {
+        if (anyOpen) {
+            detail.removeAttribute('open'); // Close all if any are open
+        } else {
+            detail.setAttribute('open', ''); // Open all if none are open
+        }
+    });
+
+    // Update button text based on the new state
+    closeAllBtn.textContent = anyOpen ? 'Open All' : 'Close All';
 });
 </script>
 <style>
