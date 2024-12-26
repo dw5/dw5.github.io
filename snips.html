@@ -162,7 +162,16 @@ rem ffmpeg -i %i -ar 22050 outdir\%i https://superuser.com/questions/912730/ffmp
 <pre id="copyText" style="border: dotted;">
 <small>all under org</small>
 <pre>^https:\/\/github\.com\/org\/[^\/]+$</pre>
+<b>Find: <pre>\b(\w+\s+\w+)\s+</pre><br>
+Replace: <pre>$1;</pre></b>
 <small>John Smith Blake Chan -> John Smith; Blake Chan;</small>
+</pre>
+</details>
+
+<details>
+<summary>docker</summary>
+<pre id="copyText" style="border: dotted;">
+<pre>rclone copy coolify:/path/to/forgejo/ /path/to/forgejo/ -P --create-empty-src-dirs</pre>
 </pre>
 </details>
 
