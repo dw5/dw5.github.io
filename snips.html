@@ -83,6 +83,11 @@ gap:8px;
 <pre>ssh sv01.nty -p 2023 -l testing -i sshkey.private</pre>
 <pre>crontab -e</pre>
 <pre>git reset --hard ae387a292e0fa75ef1571489266700c76d27f800 && git push --force</pre>
+<pre>taskkill /F /IM explorer.exe
+cd /d %userprofile%\AppData\Local
+attrib -h IconCache.db
+del IconCache.db
+start explorer.exe</pre>
 </pre>
 </details>
 
