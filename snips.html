@@ -170,6 +170,9 @@ rem ffmpeg -i %i -ar 22050 outdir\%i https://superuser.com/questions/912730/ffmp
 <b>Find: <pre>\b(\w+\s+\w+)\s+</pre><br>
 Replace: <pre>$1;</pre></b>
 <small>John Smith Blake Chan -> John Smith; Blake Chan;</small>
+<b>Find: <pre>^.*?：\s*(.*?)\s*\(S(\d{2})\s*-\s*Ep(\d{2})\)\s*(\[.*\])(\.[^.]+(?:\.[^.]+)*)?$</pre><br>
+Replace: <pre>S$2E$3 $1 $4</pre></b>
+<small>Bla bla ： Episode name (S01 - Ep07) [id] -> S01E07 Episode name [id]</small>
 </pre>
 </details>
 
