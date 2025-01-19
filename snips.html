@@ -22,8 +22,11 @@ gap:8px;
 <details>
 <summary>yt-dlp</summary>
 <pre id="copyText" style="border: dotted;">
-<pre>yt-dlp -f mp4 -S res:360 -S res,vcodec:av1 </pre>
 <pre>yt-dlp -f -</pre>
+<pre>-f mp4 </pre>
+<pre>-S res:360 </pre>
+<pre>-S res,vcodec:av1 </pre>
+<pre>yt-dlp -f "bv*+ba/b" -o "%(title)s.%(ext)s" —merge-output-format mkv </pre>
 <pre>--merge-output-format mp4</pre>
 <pre>--cookies-from-browser firefox </pre>
 <pre>--write-subs --write-auto-subs --embed-subs --write-thumbnail --write-description --write-info-json </pre>
