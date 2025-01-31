@@ -132,6 +132,14 @@ rem ffmpeg -i %i -ar 22050 outdir\%i https://superuser.com/questions/912730/ffmp
 <a href="https://github.com/kfrn/ffmpeg-things/blob/master/deinterlacing.md">https://github.com/kfrn/ffmpeg-things/blob/master/deinterlacing.md</a>
 <pre>-vf "scale=3840:2160:flags=lanczos" -c:v av1_qsv -b:v 10M -preset 4 -filter_complex "[0:a]pan=stereo|c0=c0|c1=c0[audio];[audio]volume=5.0[out]" -map 0:v -map "[out]" -c:a libopus -b:a 192k </pre>
 <pre>-vf "scale=3840:2160:flags=lanczos" -filter_complex "[0:a]pan=stereo|c0=c0|c1=c0[audio];[audio]volume=5.0[out]" -map 0:v -map "[out]" -c:v av1_qsv -b:v 10M -preset 4 -c:a libopus -b:a 192k</pre>
+<small><summary>Centered video fix</summary><details>
+  1528: width of the resulting video.
+  1080: height of the resulting video.
+  196: the starting point of cropping from the left (remove 196 pixels).
+  0: the vertical offset (no vertical cropping, keeps the original height).</details></small>
+<pre>ffmpeg -i input.mkv -vf "crop=1528:1080:196:0" -c:a copy output_cropped.mkv</pre>
+<small>force 4:3 aspect no transcode</small>
+<pre>ffmpeg -i input.mkv -c copy -aspect 4:3 output.mkv</pre>
 </pre>
 </details>
 
