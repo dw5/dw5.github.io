@@ -184,6 +184,8 @@ Replace: <pre>S$2E$3 $1 $4</pre></b>
 <pre id="copyText" style="border: dotted;">
 <pre>rclone copy coolify:/path/to/forgejo/ /path/to/forgejo/ -P --create-empty-src-dirs</pre>
 <pre>chown -R 1000 /path/to/forgejo/core/</pre>
+<small>docker wipe all</small>
+<pre>docker stop $(docker ps -a -q); docker rm $(docker ps -a -q)</pre>
 </pre>
 </details>
 
