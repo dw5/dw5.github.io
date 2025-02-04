@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File to Data URI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        #drop-zone {
+            width: 300px;
+            height: 150px;
+            border: 2px dashed #666;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px auto;
+            padding: 10px;
+            cursor: pointer;
+            background-color: #f9f9f9;
+        }
+        #drop-zone:hover {
+            background-color: #e0e0e0;
+        }
+        textarea {
+            width: 90%;
+            height: 100px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Convert File to Data URI</h2>
+
+    <input type="file" id="fileInput">
+    <div id="drop-zone">Drag & Drop a file here or click</div>
+    <textarea id="output" readonly placeholder="Data URI will appear here..."></textarea>
+
+    <script>
+        const fileInput = document.getElementById("fileInput");
+        const dropZone = document.getElementById("drop-zone");
+        const output = document.getElementById("output");
+
+        function handleFile(file) {
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (event) {
+                    output.value = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Manual file selection
+        fileInput.addEventListener("change", (event) => {
+            handleFile(event.target.files[0]);
+        });
+
+        // Drag & Drop functionality
+        dropZone.addEventListener("dragover", (event) => {
+            event.preventDefault();
+            dropZone.style.backgroundColor = "#ddd";
+        });
+
+        dropZone.addEventListener("dragleave", () => {
+            dropZone.style.backgroundColor = "#f9f9f9";
+        });
+
+        dropZone.addEventListener("drop", (event) => {
+            event.preventDefault();
+            dropZone.style.backgroundColor = "#f9f9f9";
+            handleFile(event.dataTransfer.files[0]);
+        });
+
+        // Paste functionality
+        document.addEventListener("paste", (event) => {
+            const items = event.clipboardData.items;
+            for (let item of items) {
+                if (item.kind === "file") {
+                    handleFile(item.getAsFile());
+                }
+            }
+        });
+
+        // Click to open file picker
+        dropZone.addEventListener("click", () => {
+            fileInput.click();
+        });
+    </script>
+
+</body>
+</html>
