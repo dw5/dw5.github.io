@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>JSON to Schema Redactor</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 20px;
+    }
+    textarea {
+      width: 100%;
+      height: 200px;
+      font-family: monospace;
+      font-size: 14px;
+    }
+    button {
+      margin: 10px 0;
+      padding: 8px 12px;
+      font-size: 14px;
+    }
+    .container {
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>JSON to Schema Redactor</h1>
+
+  <div class="container">
+    <h3>Input JSON</h3>
+    <textarea id="inputJson" placeholder="Paste your JSON here..."></textarea>
+    <br />
+    <button id="convertBtn">Convert</button>
+  </div>
+
+  <div class="container">
+    <h3>Output Schema</h3>
+    <textarea id="outputJson" readonly placeholder="Your redacted schema will appear here..."></textarea>
+    <br />
+    <button id="copyBtn">Copy Output</button>
+  </div>
+
+  <script>
+    /**
+     * Recursively traverse the JSON structure and replace values with dummy ones.
+     * For arrays, only the first element is processed to show the structure.
+     */
+    function redactValue(value, key) {
+      if (value === null) {
+        return null;
+      } else if (Array.isArray(value)) {
+        if (value.length > 0) {
+          // Use only the first element to represent the array structure.
+          return [redactValue(value[0], key)];
+        } else {
+          return [];
+        }
+      } else if (typeof value === 'object') {
+        const result = {};
+        for (const k in value) {
+          if (Object.prototype.hasOwnProperty.call(value, k)) {
+            result[k] = redactValue(value[k], k);
+          }
+        }
+        return result;
+      } else if (typeof value === 'string') {
+        // If the string is empty, keep it empty; otherwise, replace with dummy text.
+        return value.trim() === '' ? '' : "abcxyz";
+      } else if (typeof value === 'number') {
+        // Use different dummy numbers for keys that look like IDs or prices.
+        if (key && key.toLowerCase() === 'id') {
+          return 1234;
+        } else if (key && key.toLowerCase().includes('price')) {
+          return 1234.5;
+        }
+        return 1234;
+      } else if (typeof value === 'boolean') {
+        return false;
+      }
+      // Fallback: return the original value
+      return value;
+    }
+
+    // Convert JSON to redacted schema on button click.
+    document.getElementById('convertBtn').addEventListener('click', function() {
+      const inputText = document.getElementById('inputJson').value;
+      let parsedJson;
+      try {
+        parsedJson = JSON.parse(inputText);
+      } catch (err) {
+        alert("Invalid JSON: " + err.message);
+        return;
+      }
+      const redacted = redactValue(parsedJson, null);
+      const outputText = JSON.stringify(redacted, null, 2);
+      document.getElementById('outputJson').value = outputText;
+    });
+
+    // Copy the output to the clipboard.
+    document.getElementById('copyBtn').addEventListener('click', function() {
+      const outputText = document.getElementById('outputJson').value;
+      if (!outputText) {
+        alert("Nothing to copy!");
+        return;
+      }
+      // Use the Clipboard API if available
+      navigator.clipboard.writeText(outputText)
+        .then(() => {
+          alert("Copied to clipboard!");
+        })
+        .catch(err => {
+          alert("Error copying to clipboard: " + err);
+        });
+    });
+  </script>
+</body>
+</html>
