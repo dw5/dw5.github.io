@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JSON Schema to Sample JSON Generator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      max-width: 800px;
+    }
+    textarea {
+      width: 100%;
+      height: 250px;
+      font-family: monospace;
+      font-size: 14px;
+      padding: 10px;
+      box-sizing: border-box;
+      margin-bottom: 10px;
+    }
+    pre {
+      background: #f4f4f4;
+      padding: 10px;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    button {
+      margin: 10px 0;
+      padding: 10px 20px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <h1>JSON Schema to Sample JSON Generator</h1>
+  
+  <label for="schemaInput"><strong>Input JSON Schema:</strong></label>
+  <textarea id="schemaInput" placeholder='{
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "age": {
+      "type": "number"
+    },
+    "isStudent": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "name",
+    "age",
+    "isStudent"
+  ]
+}'></textarea>
+  
+  <br>
+  <button id="generateSample">Generate Sample JSON</button>
+  
+  <h2>Generated Sample JSON:</h2>
+  <pre id="sampleOutput"></pre>
+  <button id="copySample">Copy Sample JSON</button>
+  
+  <!-- JSON Schema Faker library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/json-schema-faker/0.5.0-rc17/json-schema-faker.min.js"></script>
+  
+  <script>
+    // Event listener to generate sample JSON from the provided JSON Schema
+    document.getElementById("generateSample").addEventListener("click", function() {
+      const schemaInput = document.getElementById("schemaInput").value;
+      try {
+        // Parse the input schema
+        const schema = JSON.parse(schemaInput);
+        // Generate a sample JSON instance using json-schema-faker
+        const sample = jsf(schema);
+        // Display the formatted sample JSON
+        document.getElementById("sampleOutput").textContent = JSON.stringify(sample, null, 2);
+      } catch (e) {
+        alert("Invalid JSON Schema! Please correct it and try again.");
+      }
+    });
+    
+    // Event listener for copying the generated sample JSON to the clipboard
+    document.getElementById("copySample").addEventListener("click", function() {
+      const sampleText = document.getElementById("sampleOutput").textContent;
+      if (!sampleText.trim()) {
+        alert("Nothing to copy! Please generate sample JSON first.");
+        return;
+      }
+      navigator.clipboard.writeText(sampleText)
+        .then(() => alert("Sample JSON copied to clipboard!"))
+        .catch(err => alert("Failed to copy sample JSON: " + err));
+    });
+  </script>
+</body>
+</html>

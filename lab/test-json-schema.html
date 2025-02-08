@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JSON to JSON Schema Generator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      max-width: 800px;
+    }
+    textarea {
+      width: 100%;
+      height: 150px;
+      font-family: monospace;
+      font-size: 14px;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+    pre {
+      background: #f4f4f4;
+      padding: 10px;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    button {
+      margin: 10px 0;
+      padding: 10px 20px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <h1>JSON to JSON Schema Generator</h1>
+  
+  <label for="jsonInput"><strong>Input JSON:</strong></label>
+  <textarea id="jsonInput" placeholder='{"name": "John", "age": 30, "isStudent": false}'></textarea>
+  <br>
+  <button id="generateBtn">Generate JSON Schema</button>
+  
+  <h2>Generated JSON Schema:</h2>
+  <pre id="schemaOutput"></pre>
+  <button id="copyBtn">Copy Schema</button>
+  
+  <script>
+    /**
+     * Recursively generates a basic JSON Schema from provided JSON data.
+     * Note: This is a simple implementation and might not cover every case.
+     */
+    function generateSchema(data) {
+      if (data === null) {
+        return { type: "null" };
+      } else if (Array.isArray(data)) {
+        // If array is non-empty, generate schema from first element.
+        const itemsSchema = data.length > 0 ? generateSchema(data[0]) : {};
+        return { type: "array", items: itemsSchema };
+      } else if (typeof data === "object") {
+        const schema = { type: "object", properties: {}, required: [] };
+        for (const key in data) {
+          if (Object.prototype.hasOwnProperty.call(data, key)) {
+            schema.properties[key] = generateSchema(data[key]);
+            schema.required.push(key);
+          }
+        }
+        return schema;
+      } else if (typeof data === "string") {
+        return { type: "string" };
+      } else if (typeof data === "number") {
+        return { type: "number" };
+      } else if (typeof data === "boolean") {
+        return { type: "boolean" };
+      } else {
+        return {};
+      }
+    }
+    
+    // Event listener for generating the JSON Schema
+    document.getElementById("generateBtn").addEventListener("click", function() {
+      const jsonInput = document.getElementById("jsonInput").value;
+      try {
+        const parsedData = JSON.parse(jsonInput);
+        const schema = generateSchema(parsedData);
+        document.getElementById("schemaOutput").textContent = JSON.stringify(schema, null, 2);
+      } catch (e) {
+        alert("Invalid JSON input! Please correct it and try again.");
+      }
+    });
+    
+    // Event listener for copying the generated schema to clipboard
+    document.getElementById("copyBtn").addEventListener("click", function() {
+      const schemaText = document.getElementById("schemaOutput").textContent;
+      if (!schemaText.trim()) {
+        alert("Nothing to copy! Please generate a schema first.");
+        return;
+      }
+      navigator.clipboard.writeText(schemaText)
+        .then(() => alert("Schema copied to clipboard!"))
+        .catch(err => alert("Failed to copy schema: " + err));
+    });
+  </script>
+</body>
+</html>
