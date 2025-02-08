@@ -124,6 +124,8 @@ start explorer.exe</pre>
 <pre>-vf "scale=3840:2160:flags=lanczos"</pre>
 <pre>-vf "scale=3840:2160:flags=lanczos" -c:v libx264 -preset slow -crf 18 -c:a copy</pre>
 <pre>-vf "scale=3840:2160:flags=lanczos" -c:v av1_qsv -b:v 10M -preset 4 -c:a copy</pre>
+<pre>-map 0 #all streams</pre>
+<pre>-c:s copy #all subtitles</pre>
 <pre>mkdir outdir
 for %%i in (*.avi) do (
 ffmpeg -i "%%i" -ss 5 "outdir\%%i"
@@ -136,7 +138,7 @@ rem ffmpeg -i %i -ar 22050 outdir\%i https://superuser.com/questions/912730/ffmp
 <small><summary>Centered video fix</summary><details>
   1528: width of the resulting video.
   1080: height of the resulting video.
-  196: the starting point of cropping from the left (remove 196 pixels).
+  196: the starting point of cropping from the left (remove 196 pixel border).
   0: the vertical offset (no vertical cropping, keeps the original height).</details></small>
 <pre>ffmpeg -i input.mkv -vf "crop=1528:1080:196:0" -c:a copy output_cropped.mkv</pre>
 <small>force 4:3 aspect no transcode</small>
