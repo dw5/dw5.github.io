@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>JSON to Schema Redactor</title>
+  <title>Universal JSON Schema Redactor</title>
   <style>
     body {
       font-family: sans-serif;
@@ -25,7 +25,7 @@
   </style>
 </head>
 <body>
-  <h1>JSON to Schema Redactor</h1>
+  <h1>Universal JSON Schema Redactor</h1>
 
   <div class="container">
     <h3>Input JSON</h3>
@@ -44,41 +44,36 @@
   <script>
     /**
      * Recursively traverse the JSON structure and replace values with dummy ones.
-     * For arrays, only the first element is processed to show the structure.
+     * This universal approach doesn't check keys, but simply uses the type of each value.
      */
-    function redactValue(value, key) {
+    function redactValue(value) {
       if (value === null) {
         return null;
       } else if (Array.isArray(value)) {
         if (value.length > 0) {
-          // Use only the first element to represent the array structure.
-          return [redactValue(value[0], key)];
+          // Process only the first element to represent the array structure.
+          return [redactValue(value[0])];
         } else {
           return [];
         }
       } else if (typeof value === 'object') {
         const result = {};
-        for (const k in value) {
-          if (Object.prototype.hasOwnProperty.call(value, k)) {
-            result[k] = redactValue(value[k], k);
+        for (const key in value) {
+          if (Object.prototype.hasOwnProperty.call(value, key)) {
+            result[key] = redactValue(value[key]);
           }
         }
         return result;
       } else if (typeof value === 'string') {
-        // If the string is empty, keep it empty; otherwise, replace with dummy text.
+        // Replace non-empty strings with "abcxyz", leave empty strings unchanged.
         return value.trim() === '' ? '' : "abcxyz";
       } else if (typeof value === 'number') {
-        // Use different dummy numbers for keys that look like IDs or prices.
-        if (key && key.toLowerCase() === 'id') {
-          return 1234;
-        } else if (key && key.toLowerCase().includes('price')) {
-          return 1234.5;
-        }
-        return 1234;
+        // Use the type of number (integer vs. non-integer) to decide dummy value.
+        return Number.isInteger(value) ? 1234 : 1234.5;
       } else if (typeof value === 'boolean') {
         return false;
       }
-      // Fallback: return the original value
+      // Fallback: return the original value if its type is unexpected.
       return value;
     }
 
@@ -92,7 +87,7 @@
         alert("Invalid JSON: " + err.message);
         return;
       }
-      const redacted = redactValue(parsedJson, null);
+      const redacted = redactValue(parsedJson);
       const outputText = JSON.stringify(redacted, null, 2);
       document.getElementById('outputJson').value = outputText;
     });
@@ -104,14 +99,9 @@
         alert("Nothing to copy!");
         return;
       }
-      // Use the Clipboard API if available
       navigator.clipboard.writeText(outputText)
-        .then(() => {
-          alert("Copied to clipboard!");
-        })
-        .catch(err => {
-          alert("Error copying to clipboard: " + err);
-        });
+        .then(() => alert("Copied to clipboard!"))
+        .catch(err => alert("Error copying to clipboard: " + err));
     });
   </script>
 </body>
