@@ -89,6 +89,7 @@ gap:8px;
 <pre>git reset --hard ae387a292e0fa75ef1571489266700c76d27f800 && git push --force</pre>
 <pre>echo minus one commit&& git reset --hard HEAD~1 && git push -f</pre>
 <pre>shell:appsfolder</pre>
+<pre>%USERPROFILE%\bin</pre>
 <pre>taskkill /F /IM explorer.exe
 cd /d %userprofile%\AppData\Local
 attrib -h IconCache.db
@@ -214,6 +215,13 @@ Replace: <pre>S$2E$3 $1 $4</pre></b>
 	    ":sftp,host=OLD_HOST,user=OLD_USER,key_file=/path/to/old/key:/source/path" \
 	    ":sftp,host=NEW_HOST,user=NEW_USER,key_file=/path/to/new/key:/dest/path" \
 	    -P --create-empty-src-dirs -l
+	  </pre>
+	  <pre>rewrite ^/git/?(.*)$ /$1 break;
+        sub_filter_types text/html text/css application/javascript;
+        sub_filter 'href="/' 'href="/git/';
+        sub_filter 'src="/' 'src="/git/';
+        sub_filter 'action="/' 'action="/git/';
+        sub_filter_once off;
 	  </pre>
   </pre>
 </details>
