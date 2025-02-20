@@ -22,8 +22,8 @@
     </style>
 </head>
 <body>
-    <h1>Text Area Line Reader</h1>
-    <textarea id="inputText" placeholder="Enter text here, one entry per line..."></textarea>
+    <h1>One per line injector</h1>
+    <textarea oninput="processText()" id="inputText" placeholder="Enter text here, one entry per line..."></textarea>
     <button onclick="processText()">Process Text</button>
     <div id="output"></div>
 
@@ -31,9 +31,11 @@
         function processText() {
             const inputText = document.getElementById('inputText').value;
             const lines = inputText.split('\n');
-            const wrappedLines = lines.map(line => `aaa ${line} bbb`);
+            const startUrl = 'aaaaa ';
+            const endUrl = ' bbbb';
+            const wrappedLines = lines.map(line => `<a href="${startUrl}${line}${endUrl}">${startUrl}${line}${endUrl}</a>`);
             const outputDiv = document.getElementById('output');
-            outputDiv.textContent = wrappedLines.join('\n');
+            outputDiv.innerHTML = wrappedLines.join('<br>');
         }
     </script>
 </body>
