@@ -227,6 +227,7 @@ Replace: <pre>S$2E$3 $1 $4</pre></b>
         sub_filter 'action="/' 'action="/git/';
         sub_filter_once off;
 	  </pre>
+    <pre>timedatectl set-timezone "$(curl --fail https://ipapi.co/timezone)" && ntpd -gq</pre>
   </pre>
 </details>
 
