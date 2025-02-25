@@ -181,6 +181,15 @@ rem ffmpeg -i %i -ar 22050 outdir\%i https://superuser.com/questions/912730/ffmp
 <pre>Get-NetTCPConnection -LocalPort 3389</pre>
 <pre>netstat -anob</pre>
 <pre>%y%mo%d_%pn_%ra{10} SHAREX</pre>
+<pre>Get-ChildItem -Directory |
+  Select-Object Name,
+      @{Name='Size (MB)'; Expression = {
+          [math]::Round( (Get-ChildItem -Path $_.FullName -Recurse -File |
+              Measure-Object -Sum Length).Sum / 1MB, 2)
+      }} |
+  Sort-Object 'Size (MB)' -Descending |
+  Format-Table -AutoSize
+  </pre>
 </pre>
 </details>
 
