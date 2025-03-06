@@ -11,6 +11,8 @@
                 document.getElementById("textInput").value = inputText.toUpperCase();
             } else if (caseType === 'lowercase') {
                 document.getElementById("textInput").value = inputText.toLowerCase();
+            } else if (caseType === 'titlecase') {
+                document.getElementById("textInput").value = inputText.replace(/\b\w/g, char => char.toUpperCase());
             }
         }
     </script>
@@ -21,6 +23,7 @@
     <br>
     <button onclick="convertText('uppercase')">Uppercase</button>
     <button onclick="convertText('lowercase')">Lowercase</button>
+    <button onclick="convertText('titlecase')">Title Case</button>
     <p>Converted Text: <span id="outputText"></span></p>
 </body>
 </html>
