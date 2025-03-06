@@ -12,7 +12,9 @@
             } else if (caseType === 'lowercase') {
                 document.getElementById("textInput").value = inputText.toLowerCase();
             } else if (caseType === 'titlecase') {
-                document.getElementById("textInput").value = inputText.replace(/\b\w/g, char => char.toUpperCase());
+                document.getElementById("textInput").value = inputText
+                    .toLowerCase() // Ensure all characters start as lowercase
+                    .replace(/(^|\s|-)\S/g, char => char.toUpperCase()); // Capitalize correctly
             }
         }
     </script>
