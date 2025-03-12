@@ -239,6 +239,12 @@ Replace: <pre>S$2E$3 $1 $4</pre></b>
         sub_filter_once off;
 	  </pre>
     <pre>timedatectl set-timezone "$(curl --fail https://ipapi.co/timezone)" && ntpd -gq</pre>
+    <pre>/etc/systemd/timesyncd.conf
+      [Time]
+NTP=0.asia.pool.ntp.org 1.asia.pool.ntp.org
+FallbackNTP=0.pool.ntp.org 1.pool.ntp.org
+    </pre>
+    <pre>sudo timedatectl set-ntp on && sudo systemctl restart systemd-timesyncd</pre>
   </pre>
 </details>
 
