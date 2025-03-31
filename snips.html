@@ -81,6 +81,7 @@ gap:8px;
 <summary>main</summary>
 <pre id="copyText" style="border: dotted;">
 <pre>php -S [::]:1337</pre>
+<pre>start ms-cxh:localonly</pre>
 <pre>dir *.mp4 /b /a-d | find /c /v ""</pre>
 <pre>wget -e robots=off</pre>
 <pre>spn.sh -p 1 tree.txt</pre>
@@ -92,6 +93,7 @@ gap:8px;
 <pre>ssh sv01.nty -p 2023 -l testing -i sshkey.private</pre>
 <pre>crontab -e</pre>
 <pre>shell:appsfolder</pre>
+<pre>Get-StartApps | Select-Object Name, AppID | Export-Csv -Path "shellappsfolder.csv" -NoTypeInformation</pre>
 <pre>$nproc = (Get-WmiObject -Class Win32_Processor).NumberOfLogicalProcessors</pre>
 <pre>%USERPROFILE%\bin</pre>
 <pre>rundll32.exe user32.dll,LockWorkStation</pre>
@@ -245,6 +247,7 @@ Replace: <pre>S$2E$3 $1 $4</pre></b>
 NTP=0.asia.pool.ntp.org 1.asia.pool.ntp.org
 FallbackNTP=0.pool.ntp.org 1.pool.ntp.org
     </pre>
+    <pre>timedatectl set-timezone Europe/Vilnius && mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u root -p mysql</pre>
     <pre>sudo timedatectl set-ntp on && sudo systemctl restart systemd-timesyncd</pre>
   </pre>
 </details>
