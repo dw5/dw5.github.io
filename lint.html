@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Formatter & Beautifier</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prettier/2.8.8/standalone.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prettier/2.8.8/parser-html.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prettier/2.8.8/parser-yaml.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prettier/2.8.8/parser-babel.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/terser/5.17.7/bundle.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            line-height: 1.6;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f7f9fc;
+            color: #333;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #2c3e50;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background-color: white;
+            padding: 25px;
+            border-radius: 8px;
+        }
+        
+        .input-output {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .input-section, .output-section {
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        .text-area {
+            width: 100%;
+            height: 300px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 14px;
+            background-color: #fff;
+            border-radius: 5px;
+            resize: vertical;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .control-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        select, button {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            background-color: #3498db;
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        select {
+            background-color: white;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        button.copy {
+            background-color: #27ae60;
+        }
+        
+        button.copy:hover {
+            background-color: #219653;
+        }
+        
+        button.clear {
+            background-color: #e74c3c;
+        }
+        
+        button.clear:hover {
+            background-color: #c0392b;
+        }
+        
+        button.sample-btn:hover {
+            background-color: #8e44ad;
+        }
+        
+        .error-message {
+            color: #e74c3c;
+            font-weight: 500;
+            margin-top: 10px;
+        }
+        
+        .success-message {
+            color: #27ae60;
+            font-weight: 500;
+            margin-top: 10px;
+        }
+        
+        .message {
+            min-height: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .input-output {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Code Formatter & Beautifier</h1>
+    
+    <div class="container">
+        <div class="controls">
+            <div class="control-group">
+                <label for="format-type">Format Type:</label>
+                <select id="format-type">
+                    <option value="html">HTML</option>
+                    <option value="yaml">YAML</option>
+                    <option value="javascript">JavaScript</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="format-mode">Mode:</label>
+                <select id="format-mode">
+                    <option value="beautify">Beautify</option>
+                    <option value="minify">Minify</option>
+                </select>
+            </div>
+            <button id="format-btn">Format</button>
+            <button id="copy-btn" class="copy">Copy Output</button>
+            <button id="clear-btn" class="clear">Clear All</button>
+        </div>
+        
+        <div class="input-output">
+            <div class="input-section">
+                <h3>Input</h3>
+                <textarea id="input-text" class="text-area" placeholder="Paste your code here..."></textarea>
+                <div id="input-message" class="message"></div>
+            </div>
+            
+            <div class="output-section">
+                <h3>Output</h3>
+                <textarea id="output-text" class="text-area" readonly></textarea>
+                <div id="output-message" class="message"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // DOM elements
+        const formatType = document.getElementById('format-type');
+        const formatMode = document.getElementById('format-mode');
+        const inputText = document.getElementById('input-text');
+        const outputText = document.getElementById('output-text');
+        const formatBtn = document.getElementById('format-btn');
+        const copyBtn = document.getElementById('copy-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        const inputMessage = document.getElementById('input-message');
+        const outputMessage = document.getElementById('output-message');
+        
+        // Format HTML function
+        function formatHTML(html, mode) {
+            try {
+                if (mode === 'beautify') {
+                    return prettier.format(html, {
+                        parser: "html",
+                        plugins: prettierPlugins,
+                        printWidth: 100,
+                        tabWidth: 2,
+                        useTabs: false,
+                        singleQuote: false
+                    });
+                } else { // minify
+                    return prettier.format(html, {
+                        parser: "html",
+                        plugins: prettierPlugins,
+                        printWidth: 9999,
+                        tabWidth: 0,
+                        useTabs: false,
+                        htmlWhitespaceSensitivity: "ignore"
+                    }).replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim();
+                }
+            } catch (error) {
+                throw new Error(`HTML formatting error: ${error.message}`);
+            }
+        }
+        
+        // Format JavaScript function
+        function formatJavaScript(js, mode) {
+            try {
+                if (mode === 'beautify') {
+                    return prettier.format(js, {
+                        parser: "babel",
+                        plugins: prettierPlugins,
+                        printWidth: 80,
+                        tabWidth: 2,
+                        useTabs: false,
+                        singleQuote: true,
+                        trailingComma: "es5",
+                        semi: true
+                    });
+                } else { // minify
+                    const minifyOptions = {
+                        compress: {
+                            drop_console: false,
+                            drop_debugger: true
+                        },
+                        mangle: true
+                    };
+                    const result = Terser.minify(js, minifyOptions);
+                    if (result.error) {
+                        throw new Error(result.error);
+                    }
+                    return result.code;
+                }
+            } catch (error) {
+                throw new Error(`JavaScript formatting error: ${error.message}`);
+            }
+        }
+        
+        // Format YAML function
+        function formatYAML(yamlText, mode) {
+            try {
+                // Parse YAML to JS object
+                const yamlObject = jsyaml.load(yamlText);
+                
+                if (mode === 'beautify') {
+                    // Convert back to properly formatted YAML
+                    return jsyaml.dump(yamlObject, {
+                        indent: 2,
+                        lineWidth: 100,
+                        noRefs: true
+                    });
+                } else { // minify
+                    // For YAML minification, we'll use a minimal dump with no unnecessary spacing
+                    return jsyaml.dump(yamlObject, {
+                        indent: 1,
+                        lineWidth: -1,
+                        noRefs: true,
+                        noCompatMode: true
+                    });
+                }
+            } catch (error) {
+                throw new Error(`YAML parsing error: ${error.message}`);
+            }
+        }
+        
+        // Format button handler
+        formatBtn.addEventListener('click', () => {
+            const input = inputText.value.trim();
+            const mode = document.getElementById('format-mode').value;
+            inputMessage.textContent = '';
+            outputMessage.textContent = '';
+            
+            if (!input) {
+                inputMessage.textContent = 'Please paste some code to format';
+                inputMessage.className = 'error-message';
+                return;
+            }
+            
+            try {
+                let formatted;
+                const type = formatType.value;
+                
+                if (type === 'html') {
+                    formatted = formatHTML(input, mode);
+                } else if (type === 'javascript') {
+                    formatted = formatJavaScript(input, mode);
+                } else {
+                    formatted = formatYAML(input, mode);
+                }
+                
+                outputText.value = formatted;
+                const action = mode === 'beautify' ? 'beautified' : 'minified';
+                outputMessage.textContent = `Code successfully ${action}!`;
+                outputMessage.className = 'success-message';
+            } catch (error) {
+                outputText.value = '';
+                outputMessage.textContent = error.message;
+                outputMessage.className = 'error-message';
+            }
+        });
+        
+        // Copy button handler
+        copyBtn.addEventListener('click', () => {
+            if (!outputText.value) {
+                outputMessage.textContent = 'Nothing to copy';
+                outputMessage.className = 'error-message';
+                return;
+            }
+            
+            outputText.select();
+            document.execCommand('copy');
+            
+            outputMessage.textContent = 'Copied to clipboard!';
+            outputMessage.className = 'success-message';
+            
+            // Deselect after copy
+            window.getSelection().removeAllRanges();
+        });
+        
+        // Clear button handler
+        clearBtn.addEventListener('click', () => {
+            inputText.value = '';
+            outputText.value = '';
+            inputMessage.textContent = '';
+            outputMessage.textContent = '';
+        });
+        
+        // Change format type handler
+        formatType.addEventListener('change', () => {
+            const selectedType = formatType.value;
+            inputText.placeholder = `Paste your ${selectedType.toUpperCase()} here...`;
+            
+            // Enable/disable minify option based on selected type
+            if (selectedType === 'javascript') {
+                formatMode.disabled = false;
+            } else {
+                formatMode.disabled = false; // All formats now support minification
+            }
+        });
+        
+        // Add a sample code button for each language
+        const addSampleButton = document.createElement('button');
+        addSampleButton.textContent = 'Load Sample';
+        addSampleButton.style.backgroundColor = '#9b59b6';
+        addSampleButton.className = 'sample-btn';
+        
+        // Add button to controls
+        document.querySelector('.controls').appendChild(addSampleButton);
+        
+        // Sample code for each type
+        const samples = {
+            html: `<!DOCTYPE html>\n<html>\n<head>\n<title>Sample</title>\n</head>\n<body>\n<div class="container">\n<h1>Hello World</h1>\n<p>This is a sample HTML code.</p>\n</div>\n</body>\n</html>`,
+            
+            yaml: `---\nname: sample-project\nversion: 1.0.0\ndependencies:\n  - name: lib1\n    version: ^2.0.0\n  - name: lib2\n    version: ~1.2.3\nscripts:\n  start: node index.js\n  test: jest\n`,
+            
+            javascript: `function calculateTotal(items) {\n  return items.reduce((total, item) => {\n    const { price, quantity = 1 } = item;\n    return total + (price * quantity);\n  }, 0);\n}\n\nconst cart = [\n  { name: "Widget", price: 9.99, quantity: 2 },\n  { name: "Gadget", price: 22.50, quantity: 1 }\n];\n\nconsole.log("Total: $" + calculateTotal(cart));`
+        };
+        
+        // Sample button handler
+        addSampleButton.addEventListener('click', () => {
+            const selectedType = formatType.value;
+            if (samples[selectedType]) {
+                inputText.value = samples[selectedType];
+                inputMessage.textContent = `Loaded ${selectedType.toUpperCase()} sample code`;
+                inputMessage.className = 'success-message';
+            }
+        });
+    </script>
+</body>
+</html>
