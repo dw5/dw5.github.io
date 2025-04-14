@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Table Viewer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        h1 {
+            margin-top: 0;
+            color: #333;
+        }
+        .input-area {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        textarea {
+            flex: 1;
+            min-height: 200px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: monospace;
+            resize: vertical;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .field-selector {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        .field-list {
+            flex: 1;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .selected-fields {
+            flex: 1;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            margin-left: 20px;
+            background-color: #f9f9f9;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .table-container {
+            overflow-x: auto;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+            position: sticky;
+            top: 0;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .checkbox-item input {
+            margin-right: 10px;
+        }
+        .error {
+            color: red;
+            margin-bottom: 10px;
+        }
+        .badge {
+            display: inline-block;
+            background-color: #e7f3ff;
+            color: #0066cc;
+            padding: 3px 8px;
+            border-radius: 4px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            border: 1px solid #0066cc;
+            cursor: pointer;
+        }
+        .badge:hover {
+            background-color: #d0e5ff;
+        }
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .controls-group {
+            display: flex;
+            gap: 10px;
+        }
+        .field-search {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            width: 100%;
+        }
+        .path-display {
+            font-family: monospace;
+            margin-bottom: 5px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>JSON Table Viewer</h1>
+        
+        <div class="input-area">
+            <textarea id="jsonInput" placeholder="Paste your JSON here..."></textarea>
+        </div>
+        
+        <div class="controls">
+            <div class="controls-group">
+                <button id="loadJsonBtn">Parse JSON</button>
+            </div>
+            <div class="controls-group">
+                <button id="clearFieldsBtn">Clear Selected Fields</button>
+            </div>
+        </div>
+        
+        <div id="errorMsg" class="error"></div>
+        
+        <div class="field-selector">
+            <div class="field-list">
+                <h3>Available Fields</h3>
+                <input type="text" id="fieldSearch" class="field-search" placeholder="Search fields...">
+                <div id="availableFields"></div>
+            </div>
+            <div class="selected-fields">
+                <h3>Selected Fields</h3>
+                <div id="selectedFields"></div>
+            </div>
+        </div>
+        
+        <button id="generateTableBtn" disabled>Generate Table</button>
+        
+        <div class="table-container">
+            <table id="dataTable">
+                <thead>
+                    <tr id="tableHeader"></tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        //TODO: Drag and drop chosen fields to change order how it will be output
+        // Global variables
+        let jsonData = null;
+        let availableFields = [];
+        let selectedFields = [];
+        
+        // DOM Elements
+        const jsonInput = document.getElementById('jsonInput');
+        const loadJsonBtn = document.getElementById('loadJsonBtn');
+        const sampleJsonBtn = document.getElementById('sampleJsonBtn');
+        const clearFieldsBtn = document.getElementById('clearFieldsBtn');
+        const fieldSearch = document.getElementById('fieldSearch');
+        const availableFieldsContainer = document.getElementById('availableFields');
+        const selectedFieldsContainer = document.getElementById('selectedFields');
+        const generateTableBtn = document.getElementById('generateTableBtn');
+        const tableHeader = document.getElementById('tableHeader');
+        const tableBody = document.getElementById('tableBody');
+        const errorMsg = document.getElementById('errorMsg');
+        
+        // Event Listeners
+        loadJsonBtn.addEventListener('click', loadJson);
+        clearFieldsBtn.addEventListener('click', clearSelectedFields);
+        generateTableBtn.addEventListener('click', generateTable);
+        fieldSearch.addEventListener('input', filterAvailableFields);
+        
+        // Function to load JSON from input
+        function loadJson() {
+            try {
+                const input = jsonInput.value.trim();
+                if (!input) {
+                    throw new Error('Please enter JSON data');
+                }
+                
+                jsonData = JSON.parse(input);
+                processJsonData();
+                errorMsg.textContent = '';
+            } catch (error) {
+                errorMsg.textContent = `Error: ${error.message}`;
+                jsonData = null;
+                resetFieldLists();
+            }
+        }
+        
+        // Process JSON data to find all possible fields
+        function processJsonData() {
+            availableFields = [];
+            let recordsArray = getRecordsArray(jsonData);
+            
+            if (recordsArray && recordsArray.length > 0) {
+                extractFields(recordsArray[0], '');
+                renderAvailableFields();
+                renderSelectedFields();
+                generateTableBtn.disabled = selectedFields.length === 0;
+            } else {
+                errorMsg.textContent = 'Error: No records found in JSON';
+                resetFieldLists();
+            }
+        }
+        
+        // Try to find a records array in the JSON data
+        function getRecordsArray(data) {
+            // Check if data is directly an array
+            if (Array.isArray(data)) {
+                return data;
+            }
+            
+            // Check for common patterns like "records", "data", "items", etc.
+            const commonArrayKeys = ['records', 'data', 'items', 'results', 'rows'];
+            for (const key of commonArrayKeys) {
+                if (data[key] && Array.isArray(data[key])) {
+                    return data[key];
+                }
+            }
+            
+            // Look for any array property at the top level
+            for (const key in data) {
+                if (Array.isArray(data[key]) && data[key].length > 0) {
+                    return data[key];
+                }
+            }
+            
+            // Recursively look for arrays in nested objects
+            for (const key in data) {
+                if (typeof data[key] === 'object' && data[key] !== null) {
+                    const nestedArray = getRecordsArray(data[key]);
+                    if (nestedArray) {
+                        return nestedArray;
+                    }
+                }
+            }
+            
+            return null;
+        }
+        
+        // Extract all fields from an object recursively
+        function extractFields(obj, prefix = '') {
+            if (!obj || typeof obj !== 'object') return;
+            
+            for (const key in obj) {
+                const value = obj[key];
+                const path = prefix ? `${prefix}.${key}` : key;
+                
+                if (Array.isArray(value)) {
+                    // Only process arrays if they have elements and first element is an object
+                    if (value.length > 0 && typeof value[0] === 'object' && value[0] !== null) {
+                        extractFields(value[0], `${path}[0]`);
+                    } else {
+                        availableFields.push({
+                            path: path,
+                            displayName: path,
+                            type: 'array'
+                        });
+                    }
+                } else if (value !== null && typeof value === 'object') {
+                    extractFields(value, path);
+                } else {
+                    availableFields.push({
+                        path: path,
+                        displayName: path,
+                        type: typeof value
+                    });
+                }
+            }
+        }
+        
+        // Render available fields
+        function renderAvailableFields() {
+            availableFieldsContainer.innerHTML = '';
+            
+            const filteredFields = fieldSearch.value 
+                ? availableFields.filter(field => field.displayName.toLowerCase().includes(fieldSearch.value.toLowerCase()))
+                : availableFields;
+            
+            filteredFields.forEach(field => {
+                const isSelected = selectedFields.some(f => f.path === field.path);
+                
+                const fieldDiv = document.createElement('div');
+                fieldDiv.className = 'checkbox-item';
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `field-${field.path}`;
+                checkbox.checked = isSelected;
+                checkbox.addEventListener('change', () => {
+                    if (checkbox.checked) {
+                        addToSelectedFields(field);
+                    } else {
+                        removeFromSelectedFields(field.path);
+                    }
+                });
+                
+                const label = document.createElement('label');
+                label.htmlFor = `field-${field.path}`;
+                label.textContent = field.displayName;
+                
+                fieldDiv.appendChild(checkbox);
+                fieldDiv.appendChild(label);
+                availableFieldsContainer.appendChild(fieldDiv);
+            });
+        }
+        
+        // Render selected fields
+        function renderSelectedFields() {
+            selectedFieldsContainer.innerHTML = '';
+            
+            if (selectedFields.length === 0) {
+                selectedFieldsContainer.innerHTML = '<p>No fields selected</p>';
+                return;
+            }
+            
+            selectedFields.forEach((field, index) => {
+                const badge = document.createElement('span');
+                badge.className = 'badge';
+                badge.textContent = field.displayName;
+                badge.title = 'Click to remove';
+                badge.addEventListener('click', () => {
+                    removeFromSelectedFields(field.path);
+                });
+                
+                selectedFieldsContainer.appendChild(badge);
+            });
+            
+            generateTableBtn.disabled = selectedFields.length === 0;
+        }
+        
+        // Add a field to selected fields
+        function addToSelectedFields(field) {
+            if (!selectedFields.some(f => f.path === field.path)) {
+                selectedFields.push(field);
+                renderSelectedFields();
+                renderAvailableFields(); // Update checkboxes
+            }
+        }
+        
+        // Remove a field from selected fields
+        function removeFromSelectedFields(path) {
+            selectedFields = selectedFields.filter(field => field.path !== path);
+            renderSelectedFields();
+            renderAvailableFields(); // Update checkboxes
+        }
+        
+        // Clear all selected fields
+        function clearSelectedFields() {
+            selectedFields = [];
+            renderSelectedFields();
+            renderAvailableFields();
+        }
+        
+        // Filter available fields based on search
+        function filterAvailableFields() {
+            renderAvailableFields();
+        }
+        
+        // Generate the table
+        function generateTable() {
+            if (selectedFields.length === 0 || !jsonData) {
+                return;
+            }
+            
+            // Clear existing table
+            tableHeader.innerHTML = '';
+            tableBody.innerHTML = '';
+            
+            // Add Record # column to header
+            const recordHeader = document.createElement('th');
+            recordHeader.textContent = 'Record #';
+            tableHeader.appendChild(recordHeader);
+            
+            // Generate table header for selected fields
+            selectedFields.forEach(field => {
+                const th = document.createElement('th');
+                th.textContent = field.displayName;
+                tableHeader.appendChild(th);
+            });
+            
+            // Get records array
+            const recordsArray = getRecordsArray(jsonData);
+            
+            if (!recordsArray || recordsArray.length === 0) {
+                errorMsg.textContent = 'No records found in the data';
+                return;
+            }
+            
+            // Generate table rows
+            recordsArray.forEach((record, index) => {
+                const tr = document.createElement('tr');
+                
+                // Add record identifier column
+                const recordIdCell = document.createElement('td');
+                recordIdCell.textContent = index + 1;
+                tr.appendChild(recordIdCell);
+                
+                // Add data columns
+                selectedFields.forEach(field => {
+                    const td = document.createElement('td');
+                    const value = getValueFromPath(record, field.path);
+                    
+                    if (value === undefined || value === null) {
+                        td.textContent = '';
+                    } else if (typeof value === 'object') {
+                        td.textContent = JSON.stringify(value);
+                    } else {
+                        td.textContent = value;
+                    }
+                    
+                    tr.appendChild(td);
+                });
+                
+                tableBody.appendChild(tr);
+            });
+        }
+        
+        // Get a value from an object using a dot-notation path
+        function getValueFromPath(obj, path) {
+            const parts = path.split('.');
+            let current = obj;
+            
+            for (let i = 0; i < parts.length; i++) {
+                const part = parts[i];
+                
+                // Handle array notation like "items[0]"
+                if (part.includes('[') && part.includes(']')) {
+                    const arrayName = part.substring(0, part.indexOf('['));
+                    const index = parseInt(part.substring(part.indexOf('[') + 1, part.indexOf(']')));
+                    
+                    if (!current[arrayName] || !Array.isArray(current[arrayName]) || !current[arrayName][index]) {
+                        return undefined;
+                    }
+                    
+                    current = current[arrayName][index];
+                } else {
+                    if (current === undefined || current === null) {
+                        return undefined;
+                    }
+                    
+                    current = current[part];
+                }
+            }
+            
+            return current;
+        }
+        
+        // Reset field lists
+        function resetFieldLists() {
+            availableFields = [];
+            selectedFields = [];
+            availableFieldsContainer.innerHTML = '';
+            selectedFieldsContainer.innerHTML = '<p>No fields selected</p>';
+            generateTableBtn.disabled = true;
+            tableHeader.innerHTML = '';
+            tableBody.innerHTML = '';
+        }
+    </script>
+</body>
+</html>
