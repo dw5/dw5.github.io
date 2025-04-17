@@ -94,6 +94,7 @@ gap:8px;
 <pre>ssh sv01.nty -p 2023 -l testing -i sshkey.private</pre>
 <pre>crontab -e</pre>
 <pre>shell:appsfolder</pre>
+<pre>Get-Content -Path "c:\file.ps1" | Out-String | Invoke-Expression -ErrorAction SilentlyContinue</pre>
 <pre>Get-StartApps | Select-Object Name, AppID | Export-Csv -Path "shellappsfolder.csv" -NoTypeInformation</pre>
 <pre>$nproc = (Get-WmiObject -Class Win32_Processor).NumberOfLogicalProcessors</pre>
 <pre>%USERPROFILE%\bin</pre>
