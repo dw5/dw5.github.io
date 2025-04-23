@@ -94,6 +94,24 @@ gap:8px;
 <pre>curl -O xyz </pre>
 <pre>ssh sv01.nty -p 2023 -l testing -i sshkey.private</pre>
 <pre>ssh -L 3391&colon;&lt;DEST&lowbar;IP&gt;&colon;&lt;DEST&lowbar;PORT&gt; -N -f user&commat;&lt;SSH&lowbar;SERVER&lowbar;IP&gt; -p 22&NewLine;</pre>
+<pre>Host mytunnel
+    HostName      SSH_SERVER_IP
+    User          user
+    Port          22
+    LocalForward  3391 DEST_IP:DEST_PORT
+    ExitOnForwardFailure yes     # abort if bind/forward fails
+    ServerAliveInterval 60       # keep-alive pings
+
+ssh -Nf mytunnel      # background + non-interactive
+</pre>
+<pre>
+sshd_config
+Match User tunneluser
+    X11Forwarding no
+    AllowTcpForwarding yes
+    PermitOpen DEST_IP:DEST_PORT
+    ForceCommand echo 'Port-forward only'; sleep 3600
+</pre>
 <pre>crontab -e</pre>
 <pre>shell:appsfolder</pre>
 <pre>Get-Content -Path "c:\file.ps1" | Out-String | Invoke-Expression -ErrorAction SilentlyContinue</pre>
