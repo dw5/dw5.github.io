@@ -470,32 +470,49 @@
         }
         
         function convertToLocalTime(timeObj, fromTimezone) {
-            // Create a date object using today's date in the source timezone
+            // Get the current date
             const now = new Date();
-            const year = now.getFullYear();
-            const month = now.getMonth();
-            const day = now.getDate();
             
-            // Create a date in the source timezone
-            const dateInTimezone = new Date(year, month, day, timeObj.hours, timeObj.minutes);
+            // Create a date object for the specified time in the source timezone
+            // Use UTC date constructor to avoid any automatic timezone adjustments
+            const utcDate = new Date(Date.UTC(
+                now.getUTCFullYear(),
+                now.getUTCMonth(),
+                now.getUTCDate(),
+                timeObj.hours,
+                timeObj.minutes,
+                0
+            ));
             
-            // Format options for the source timezone
-            const options = {
-                timeZone: fromTimezone,
+            // Convert the UTC time to the local browser timezone
+            // First, get the UTC timestamp
+            const utcTimestamp = utcDate.getTime();
+            
+            // Calculate timezone offsets
+            const browserOffset = new Date().getTimezoneOffset() * 60000; // in milliseconds
+            
+            // Get the offset for the source timezone by comparing it with UTC
+            let sourceOffset = 0;
+            try {
+                // Create temporary dates to calculate the timezone offset
+                const tempDate = new Date();
+                const tempUtcString = tempDate.toLocaleString('en-US', { timeZone: 'UTC' });
+                const tempUtcDate = new Date(tempUtcString);
+                const tempTzString = tempDate.toLocaleString('en-US', { timeZone: fromTimezone });
+                const tempTzDate = new Date(tempTzString);
+                
+                // Calculate difference in minutes
+                sourceOffset = (tempUtcDate - tempTzDate) / 60000;
+            } catch (e) {
+                console.error("Error calculating timezone offset:", e);
+            }
+            
+            // Apply the correct offset to convert from source timezone to local browser timezone
+            const adjustedTime = new Date(utcTimestamp - (sourceOffset * 60000) - browserOffset);
+            
+            // Format the result
+            return adjustedTime.toLocaleTimeString('en-US', {
                 hour12: false,
-                hour: '2-digit',
-                minute: '2-digit'
-            };
-            
-            // Convert to source timezone string
-            const tzString = dateInTimezone.toLocaleTimeString('en-US', options);
-            
-            // Create a date object for the local timezone
-            const localDate = new Date(year, month, day, parseInt(tzString.split(':')[0]), parseInt(tzString.split(':')[1]));
-            
-            // Format for local timezone
-            return localDate.toLocaleTimeString('en-US', {
-                hour12: false, 
                 hour: '2-digit',
                 minute: '2-digit'
             });
