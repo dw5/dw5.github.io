@@ -331,6 +331,31 @@
             }
         ];
 
+        // Map of common timezone abbreviations to IANA timezone strings
+        const timezoneAbbreviations = {
+            'PST': 'America/Los_Angeles',
+            'PDT': 'America/Los_Angeles',
+            'MST': 'America/Denver',
+            'MDT': 'America/Denver',
+            'CST': 'America/Chicago',
+            'CDT': 'America/Chicago',
+            'EST': 'America/New_York',
+            'EDT': 'America/New_York',
+            'GMT': 'Etc/GMT',
+            'UTC': 'UTC',
+            'BST': 'Europe/London',
+            'CET': 'Europe/Paris',
+            'CEST': 'Europe/Paris',
+            'EET': 'Europe/Helsinki',
+            'EEST': 'Europe/Helsinki',
+            'IST': 'Asia/Kolkata',
+            'JST': 'Asia/Tokyo',
+            'AEST': 'Australia/Sydney',
+            'AEDT': 'Australia/Sydney',
+            'NZST': 'Pacific/Auckland',
+            'NZDT': 'Pacific/Auckland'
+        };
+
         function initialize() {
             const savedData = localStorage.getItem('worldClockData');
             
@@ -403,7 +428,7 @@
                         const endFormatted = formatTimeRange(range.end);
                         
                         // Add native time (time in the timezone)
-                        clockHTML += `<div class="native-time">Native: ${startFormatted}-${endFormatted}</div>`;
+                        clockHTML += `<div class="native-time">Native: ${startFormatted}-${endFormatted} (${range.warnBefore}min warning)</div>`;
                         
                         // Add local time conversion
                         const localStart = convertToLocalTime(range.start, clock.timezone);
@@ -542,6 +567,7 @@
             
             // Handle events for this clock
             const clockElement = document.querySelector(`.clock[data-id="${clockId}"]`);
+            if (!clockElement) return;
             
             // Reset classes
             clockElement.classList.remove('active-time', 'warning-time', 'inactive-time', 'hidden-clock');
@@ -570,12 +596,13 @@
                             const status = getTimeRangeStatus(now, range, tz);
                             
                             // Prioritize statuses: active > warning > inactive
-                            if (status === 'active' || eventStatus === 'none') {
-                                eventStatus = status;
+                            if (status === 'active') {
+                                eventStatus = 'active';
+                                break; // Active is highest priority, we can stop checking
                             } else if (status === 'warning' && eventStatus !== 'active') {
-                                eventStatus = status;
+                                eventStatus = 'warning';
                             } else if (status === 'inactive' && eventStatus === 'none') {
-                                eventStatus = status;
+                                eventStatus = 'inactive';
                             }
                         }
                     }
@@ -607,7 +634,24 @@
 
         function getTimeRangeStatus(now, range, timezone) {
             // Convert to timezone-aware time
-            const tzDate = new Date(now.toLocaleString('en-US', { timeZone: timezone }));
+            let tzDate;
+            
+            if (timezone === 'UTC') {
+                // Handle UTC specially since it's a special case
+                const utcNow = new Date(
+                    now.getUTCFullYear(), 
+                    now.getUTCMonth(), 
+                    now.getUTCDate(), 
+                    now.getUTCHours(), 
+                    now.getUTCMinutes(), 
+                    now.getUTCSeconds()
+                );
+                tzDate = utcNow;
+            } else {
+                // For other timezones, use the locale string method
+                const tzString = now.toLocaleString('en-US', { timeZone: timezone });
+                tzDate = new Date(tzString);
+            }
             
             const current = {
                 hours: tzDate.getHours(),
@@ -626,21 +670,32 @@
             // Handle overnight ranges
             const isOvernight = endMinutes < startMinutes;
             
-            // Check warning period first
-            const warningStart = (startMinutes - warnBefore + 1440) % 1440;
-            if (isOvernight ?
-                (currentMinutes >= warningStart || currentMinutes < startMinutes) :
-                (currentMinutes >= warningStart && currentMinutes < startMinutes)) {
-                return 'warning';
+            // Check warning period
+            const warningStartMinutes = (startMinutes - warnBefore + 1440) % 1440;
+            
+            // Check active period first
+            if (isOvernight) {
+                if (currentMinutes >= startMinutes || currentMinutes < endMinutes) {
+                    return 'active';
+                }
+            } else {
+                if (currentMinutes >= startMinutes && currentMinutes < endMinutes) {
+                    return 'active';
+                }
             }
-
-            // Check active period
-            if (isOvernight ?
-                (currentMinutes >= startMinutes || currentMinutes < endMinutes) :
-                (currentMinutes >= startMinutes && currentMinutes < endMinutes)) {
-                return 'active';
+            
+            // Check warning period next
+            if (isOvernight) {
+                if (currentMinutes >= warningStartMinutes && currentMinutes < startMinutes) {
+                    return 'warning';
+                }
+            } else {
+                if (currentMinutes >= warningStartMinutes && currentMinutes < startMinutes) {
+                    return 'warning';
+                }
             }
-
+            
+            // If neither active nor warning, it's inactive
             return 'inactive';
         }
 
@@ -656,31 +711,6 @@
             }
         }
 
-        // Map of common timezone abbreviations to IANA timezone strings
-        const timezoneAbbreviations = {
-            'PST': 'America/Los_Angeles',
-            'PDT': 'America/Los_Angeles',
-            'MST': 'America/Denver',
-            'MDT': 'America/Denver',
-            'CST': 'America/Chicago',
-            'CDT': 'America/Chicago',
-            'EST': 'America/New_York',
-            'EDT': 'America/New_York',
-            'GMT': 'Etc/GMT',
-            'UTC': 'UTC',
-            'BST': 'Europe/London',
-            'CET': 'Europe/Paris',
-            'CEST': 'Europe/Paris',
-            'EET': 'Europe/Helsinki',
-            'EEST': 'Europe/Helsinki',
-            'IST': 'Asia/Kolkata',
-            'JST': 'Asia/Tokyo',
-            'AEST': 'Australia/Sydney',
-            'AEDT': 'Australia/Sydney',
-            'NZST': 'Pacific/Auckland',
-            'NZDT': 'Pacific/Auckland'
-        };
-        
         function showAddClockForm() {
             const timezoneInput = prompt('Enter timezone (e.g., Europe/London, PST, UTC):');
             if (!timezoneInput) return;
@@ -773,7 +803,7 @@
                 const timeRanges = event.timeRanges.map(range => {
                     const start = `${String(range.start.hours).padStart(2, '0')}:${String(range.start.minutes).padStart(2, '0')}`;
                     const end = `${String(range.end.hours).padStart(2, '0')}:${String(range.end.minutes).padStart(2, '0')}`;
-                    return `${start} - ${end}`;
+                    return `${start} - ${end} (${range.warnBefore}min warning)`;
                 }).join(', ');
                 
                 const dateRange = formatDateRange(event.startDate, event.endDate) || 'Always';
@@ -898,7 +928,7 @@
             populateEventTable();
             showModal('eventModal');
         }
-
+        
         function deleteEvent(index) {
             if (confirm('Are you sure you want to delete this event?')) {
                 events.splice(index, 1);
@@ -965,12 +995,6 @@
                 events: events
             };
             localStorage.setItem('worldClockData', JSON.stringify(data));
-        }
-
-        function parseTime(timeString) {
-            if (!timeString) return null;
-            const [hours, minutes] = timeString.split(':').map(Number);
-            return { hours, minutes };
         }
 
         // Initialize the application
