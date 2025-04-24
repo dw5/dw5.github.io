@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>World Clock</title>
+    <title>World Clock & Event Manager</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -16,6 +16,8 @@
             flex-wrap: wrap;
             gap: 20px;
             margin-top: 20px;
+            position: relative;
+            min-height: 300px;
         }
 
         .clock {
@@ -25,6 +27,8 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             cursor: move;
             position: absolute;
+            transition: background 0.3s ease, opacity 0.3s ease;
+            width: 200px;
         }
 
         .clock-header {
@@ -56,12 +60,34 @@
             border-radius: 5px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
             z-index: 1000;
+            max-width: 80%;
+            max-height: 80%;
+            overflow-y: auto;
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
         }
 
         button {
             padding: 8px 16px;
             margin: 5px;
             cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        button:hover {
+            background-color: #45a049;
         }
 
         .delete-btn {
@@ -69,90 +95,263 @@
             color: white;
             border: none;
             border-radius: 3px;
+            padding: 3px 8px;
         }
-		
-		.clock {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            cursor: move;
-            position: absolute;
-            transition: background 0.3s ease;
-            width: 200px;
+
+        .delete-btn:hover {
+            background: #cc0000;
+        }
+
+        .reset-btn {
+            background-color: #ff9800;
+        }
+
+        .reset-btn:hover {
+            background-color: #e68a00;
         }
 
         .active-time {
             background: #e6ffe6 !important;
+            box-shadow: 0 0 8px rgba(0,128,0,0.5);
         }
+
         .warning-time {
             background: #fff9e6 !important;
+            box-shadow: 0 0 8px rgba(255,153,0,0.5);
         }
+
         .inactive-time {
             background: #ffe6e6 !important;
+        }
+
+        .hidden-clock {
+            opacity: 0.4;
+        }
+
+        .event-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            font-size: 12px;
+            border-radius: 10px;
+            margin-top: 5px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .controls {
+            margin-bottom: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .date-badge {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+            display: block;
+        }
+
+        .event-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        input, select {
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
         }
     </style>
 </head>
 <body>
-    <button onclick="showAddClockForm()">Add Clock</button>
-    <button onclick="exportClocks()">Export Clocks</button>
-    <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importClocks()">
-    <button onclick="document.getElementById('importFile').click()">Import Clocks</button>
+    <h1>World Clock & Event Manager</h1>
+    
+    <div class="controls">
+        <button onclick="showAddClockForm()">Add Clock</button>
+        <button onclick="showEventManager()">Manage Events</button>
+        <button onclick="exportClocks()">Export Data</button>
+        <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importClocks()">
+        <button onclick="document.getElementById('importFile').click()">Import Data</button>
+        <button class="reset-btn" onclick="resetToDefault()">Reset to Default</button>
+    </div>
     
     <div id="clockContainer" class="clock-container"></div>
 
+    <div id="overlay" class="overlay"></div>
+
     <div id="utcModal" class="modal">
+        <h3>Timezone Information</h3>
         <p id="utcInfo"></p>
-        <button onclick="closeModal()">Close</button>
+        <button onclick="closeModal('utcModal')">Close</button>
+    </div>
+
+    <div id="eventModal" class="modal">
+        <h3>Event Manager</h3>
+        <p>Manage events and time-based highlighting for your clocks</p>
+        
+        <button onclick="showAddEventForm()">Add New Event</button>
+        <table id="eventTable">
+            <thead>
+                <tr>
+                    <th>Event Name</th>
+                    <th>Clock</th>
+                    <th>Time Range</th>
+                    <th>Date Range</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="eventTableBody">
+                <!-- Events will be populated here -->
+            </tbody>
+        </table>
+        <button onclick="closeModal('eventModal')">Close</button>
+    </div>
+
+    <div id="addEventModal" class="modal">
+        <h3>Add New Event</h3>
+        <div class="form-group">
+            <label for="eventName">Event Name:</label>
+            <input type="text" id="eventName" placeholder="Event Name">
+        </div>
+        
+        <div class="form-group">
+            <label for="clockSelect">Select Clock:</label>
+            <select id="clockSelect">
+                <!-- Clock options will be populated here -->
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="startTime">Start Time (HH:MM):</label>
+            <input type="time" id="startTime">
+        </div>
+        
+        <div class="form-group">
+            <label for="endTime">End Time (HH:MM):</label>
+            <input type="time" id="endTime">
+        </div>
+        
+        <div class="form-group">
+            <label for="warnBefore">Warning (minutes before):</label>
+            <input type="number" id="warnBefore" value="15" min="0">
+        </div>
+        
+        <div class="form-group">
+            <label for="startDate">Start Date (optional):</label>
+            <input type="date" id="startDate">
+        </div>
+        
+        <div class="form-group">
+            <label for="endDate">End Date (optional):</label>
+            <input type="date" id="endDate">
+        </div>
+        
+        <button onclick="saveEvent()">Save Event</button>
+        <button onclick="closeModal('addEventModal')">Cancel</button>
     </div>
 
     <script>
         let clocks = [];
+        let events = [];
         let draggingElement = null;
         let offset = [0, 0];
-		
+        let editingEventIndex = -1;
+        
         const CLOCK_SPACING = 220;
 
         const defaultClocks = [
             { 
+                id: 'clock-1',
                 city: 'London', 
                 timezone: 'Europe/London',
                 x: 20,
                 y: 20
             },
             { 
+                id: 'clock-2',
                 city: 'Vilnius', 
                 timezone: 'Europe/Vilnius',
                 x: 20 + CLOCK_SPACING,
                 y: 20
             },
             { 
-                city: 'DeepSeek API Discount', 
+                id: 'clock-3',
+                city: 'UTC', 
                 timezone: 'UTC',
                 x: 20 + CLOCK_SPACING * 2,
-                y: 20,
+                y: 20
+            }
+        ];
+
+        const defaultEvents = [
+            {
+                name: 'Deepseek API Discount',
+                clockId: 'clock-3',
                 timeRanges: [{
                     start: { hours: 16, minutes: 30 },
                     end: { hours: 0, minutes: 30 },
                     warnBefore: 15
-                }]
+                }],
+                startDate: null,
+                endDate: null
             }
         ];
 
         function initialize() {
-            const savedClocks = localStorage.getItem('clocks');
-            clocks = savedClocks ? JSON.parse(savedClocks) : defaultClocks;
+            const savedData = localStorage.getItem('worldClockData');
             
-            // Position clocks in a grid if first load
-            if (!savedClocks) {
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                clocks = data.clocks || defaultClocks;
+                events = data.events || defaultEvents;
+            } else {
+                clocks = defaultClocks;
+                events = defaultEvents;
                 positionClocksGrid();
             }
             
-            clocks.forEach((clock, index) => createClockElement(clock, index));
+            renderClocks();
             setInterval(updateAllClocks, 1000);
         }
-		
-		function positionClocksGrid() {
+        
+        function renderClocks() {
+            const container = document.getElementById('clockContainer');
+            container.innerHTML = '';
+            
+            clocks.forEach((clock, index) => {
+                createClockElement(clock, index);
+            });
+        }
+        
+        function positionClocksGrid() {
             clocks.forEach((clock, index) => {
                 clock.x = 20 + (index % 3) * CLOCK_SPACING;
                 clock.y = 20 + Math.floor(index / 3) * 150;
@@ -162,26 +361,67 @@
         function createClockElement(clock, index) {
             const element = document.createElement('div');
             element.className = 'clock';
+            element.setAttribute('data-id', clock.id);
             element.style.left = clock.x + 'px';
             element.style.top = clock.y + 'px';
-            element.innerHTML = `
+            
+            // Create clock HTML
+            let clockHTML = `
                 <div class="clock-header">
                     <h3>${clock.city}</h3>
-                    <button class="delete-btn" onclick="deleteClock(${index})">×</button>
+                    <button class="delete-btn" onclick="deleteClock('${clock.id}')">×</button>
                 </div>
-                <div class="time" id="time-${index}"></div>
+                <div class="time" id="time-${clock.id}"></div>
                 <div class="timezone" onclick="showUtcOffset('${clock.timezone}')">
                     ${getTimezoneAbbreviation(clock.timezone)}
                 </div>
             `;
             
+            // Add events associated with this clock
+            const clockEvents = events.filter(event => event.clockId === clock.id);
+            if (clockEvents.length > 0) {
+                clockHTML += '<div class="events">';
+                clockEvents.forEach(event => {
+                    clockHTML += `<div class="event-name">${event.name}</div>`;
+                    
+                    // Add date range if available
+                    if (event.startDate || event.endDate) {
+                        const dateText = formatDateRange(event.startDate, event.endDate);
+                        clockHTML += `<span class="date-badge">${dateText}</span>`;
+                    }
+                });
+                clockHTML += '</div>';
+            }
+            
+            element.innerHTML = clockHTML;
+            
             element.addEventListener('mousedown', startDragging);
             document.getElementById('clockContainer').appendChild(element);
-            updateClockTime(index);
+            
+            updateClockTime(clock.id);
+        }
+
+        function formatDateRange(startDate, endDate) {
+            if (!startDate && !endDate) return '';
+            
+            if (startDate && endDate) {
+                return `${formatDate(startDate)} - ${formatDate(endDate)}`;
+            } else if (startDate) {
+                return `From ${formatDate(startDate)}`;
+            } else {
+                return `Until ${formatDate(endDate)}`;
+            }
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString();
         }
 
         function startDragging(e) {
-            if (e.target.classList.contains('delete-btn')) return;
+            if (e.target.classList.contains('delete-btn') || 
+                e.target.classList.contains('timezone')) return;
             
             draggingElement = e.target.closest('.clock');
             const rect = draggingElement.getBoundingClientRect();
@@ -200,10 +440,14 @@
             draggingElement.style.left = (e.clientX - offset[0]) + 'px';
             draggingElement.style.top = (e.clientY - offset[1]) + 'px';
             
-            const index = Array.from(document.querySelectorAll('.clock')).indexOf(draggingElement);
-            clocks[index].x = parseInt(draggingElement.style.left);
-            clocks[index].y = parseInt(draggingElement.style.top);
-            saveClocks();
+            const clockId = draggingElement.getAttribute('data-id');
+            const clockIndex = clocks.findIndex(c => c.id === clockId);
+            
+            if (clockIndex !== -1) {
+                clocks[clockIndex].x = parseInt(draggingElement.style.left);
+                clocks[clockIndex].y = parseInt(draggingElement.style.top);
+                saveData();
+            }
         }
 
         function stopDragging() {
@@ -213,41 +457,99 @@
         }
 
         function updateAllClocks() {
-            clocks.forEach((_, index) => updateClockTime(index));
+            clocks.forEach(clock => updateClockTime(clock.id));
         }
 
-        function updateClockTime(index) {
-            const timeElement = document.getElementById(`time-${index}`);
+        function updateClockTime(clockId) {
+            const timeElement = document.getElementById(`time-${clockId}`);
             if (!timeElement) return;
             
+            const clock = clocks.find(c => c.id === clockId);
+            if (!clock) return;
+            
             const options = {
-                timeZone: clocks[index].timezone,
+                timeZone: clock.timezone,
                 hour12: false,
                 hour: '2-digit',
                 minute: '2-digit',
                 second: '2-digit'
             };
             
-            timeElement.textContent = new Date().toLocaleTimeString('en-US', options);
-            // Handle time range highlighting
-            const clockObj = clocks[index];
-            if (clockObj.timeRanges) {
-                const now = new Date();
-                const tz = clockObj.timezone === 'UTC' ? 'UTC' : 'local';
+            const now = new Date();
+            timeElement.textContent = now.toLocaleTimeString('en-US', options);
+            
+            // Handle events for this clock
+            const clockElement = document.querySelector(`.clock[data-id="${clockId}"]`);
+            
+            // Reset classes
+            clockElement.classList.remove('active-time', 'warning-time', 'inactive-time', 'hidden-clock');
+            
+            // Find active events for this clock
+            const clockEvents = events.filter(event => event.clockId === clockId);
+            
+            if (clockEvents.length > 0) {
+                let eventStatus = 'none';
                 
-                clockObj.timeRanges.forEach(range => {
-                    const status = getTimeRangeStatus(now, range, tz);
-                    element.classList.remove('active-time', 'warning-time', 'inactive-time');
-                    element.classList.add(`${status}-time`);
-                });
+                // Check each event
+                for (const event of clockEvents) {
+                    // Check if event is in date range
+                    const isInDateRange = checkDateRange(now, event.startDate, event.endDate);
+                    
+                    if (!isInDateRange) {
+                        clockElement.classList.add('hidden-clock');
+                        continue;
+                    }
+                    
+                    // Check time ranges
+                    if (event.timeRanges && event.timeRanges.length > 0) {
+                        const tz = clock.timezone;
+                        
+                        for (const range of event.timeRanges) {
+                            const status = getTimeRangeStatus(now, range, tz);
+                            
+                            // Prioritize statuses: active > warning > inactive
+                            if (status === 'active' || eventStatus === 'none') {
+                                eventStatus = status;
+                            } else if (status === 'warning' && eventStatus !== 'active') {
+                                eventStatus = status;
+                            } else if (status === 'inactive' && eventStatus === 'none') {
+                                eventStatus = status;
+                            }
+                        }
+                    }
+                }
+                
+                // Apply the highest priority status
+                if (eventStatus !== 'none') {
+                    clockElement.classList.add(`${eventStatus}-time`);
+                }
             }
         }
-		
-		
+        
+        function checkDateRange(now, startDate, endDate) {
+            // If no dates specified, always show
+            if (!startDate && !endDate) return true;
+            
+            const currentDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            
+            if (startDate && endDate) {
+                return currentDate >= new Date(startDate) && currentDate <= new Date(endDate);
+            } else if (startDate) {
+                return currentDate >= new Date(startDate);
+            } else if (endDate) {
+                return currentDate <= new Date(endDate);
+            }
+            
+            return true;
+        }
+
         function getTimeRangeStatus(now, range, timezone) {
+            // Convert to timezone-aware time
+            const tzDate = new Date(now.toLocaleString('en-US', { timeZone: timezone }));
+            
             const current = {
-                hours: timezone === 'UTC' ? now.getUTCHours() : now.getHours(),
-                minutes: timezone === 'UTC' ? now.getUTCMinutes() : now.getMinutes()
+                hours: tzDate.getHours(),
+                minutes: tzDate.getMinutes()
             };
             
             const start = range.start;
@@ -304,49 +606,40 @@
             }
             
             const city = prompt('Enter city/label name:') || timezone;
+            const clockId = 'clock-' + Date.now();
+            
             const newClock = {
+                id: clockId,
                 city,
                 timezone,
                 x: 20,
-                y: 20 + clocks.length * 80
+                y: 20 + clocks.length * 150
             };
             
-            clocks.push(newClock);
-            createClockElement(newClock, clocks.length - 1);
-            saveClocks();
-			
-            // Add time range configuration
-            if (confirm('Add time range for highlights?')) {
-                const start = prompt('Start time (HH:MM):');
-                const end = prompt('End time (HH:MM):');
-                const warn = prompt('Warn before (minutes):', 15);
-                
-                newClock.timeRanges = [{
-                    start: parseTime(start),
-                    end: parseTime(end),
-                    warnBefore: parseInt(warn)
-                }];
-            }
-
             // Position new clock in grid
             newClock.x = 20 + (clocks.length % 3) * CLOCK_SPACING;
             newClock.y = 20 + Math.floor(clocks.length / 3) * 150;
             
             clocks.push(newClock);
             createClockElement(newClock, clocks.length - 1);
-            saveClocks();
+            saveData();
+            
+            // Ask if they want to add an event
+            if (confirm('Add event for this clock?')) {
+                showAddEventForm(clockId);
+            }
         }
 
-        function parseTime(timeString) {
-            const [hours, minutes] = timeString.split(':').map(Number);
-            return { hours, minutes };
-        }
-
-        function deleteClock(index) {
+        function deleteClock(clockId) {
+            const index = clocks.findIndex(c => c.id === clockId);
+            if (index === -1) return;
+            
+            // Also delete any events associated with this clock
+            events = events.filter(event => event.clockId !== clockId);
+            
             clocks.splice(index, 1);
-            document.getElementById('clockContainer').innerHTML = '';
-            clocks.forEach(createClockElement);
-            saveClocks();
+            renderClocks();
+            saveData();
         }
 
         function showUtcOffset(timezone) {
@@ -357,20 +650,181 @@
             }).split(' ').pop();
             
             document.getElementById('utcInfo').textContent = `${timezone} - ${utcOffset}`;
-            document.getElementById('utcModal').style.display = 'block';
+            showModal('utcModal');
         }
 
-        function closeModal() {
-            document.getElementById('utcModal').style.display = 'none';
+        function showModal(modalId) {
+            document.getElementById('overlay').style.display = 'block';
+            document.getElementById(modalId).style.display = 'block';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        function showEventManager() {
+            populateEventTable();
+            showModal('eventModal');
+        }
+
+        function populateEventTable() {
+            const tableBody = document.getElementById('eventTableBody');
+            tableBody.innerHTML = '';
+            
+            events.forEach((event, index) => {
+                const clock = clocks.find(c => c.id === event.clockId);
+                if (!clock) return;
+                
+                const timeRanges = event.timeRanges.map(range => {
+                    const start = `${String(range.start.hours).padStart(2, '0')}:${String(range.start.minutes).padStart(2, '0')}`;
+                    const end = `${String(range.end.hours).padStart(2, '0')}:${String(range.end.minutes).padStart(2, '0')}`;
+                    return `${start} - ${end}`;
+                }).join(', ');
+                
+                const dateRange = formatDateRange(event.startDate, event.endDate) || 'Always';
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${event.name}</td>
+                    <td>${clock.city}</td>
+                    <td>${timeRanges}</td>
+                    <td>${dateRange}</td>
+                    <td>
+                        <button onclick="editEvent(${index})">Edit</button>
+                        <button class="delete-btn" onclick="deleteEvent(${index})">Delete</button>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+        }
+
+        function showAddEventForm(clockId = null) {
+            editingEventIndex = -1;
+            
+            // Reset form
+            document.getElementById('eventName').value = '';
+            document.getElementById('startTime').value = '';
+            document.getElementById('endTime').value = '';
+            document.getElementById('warnBefore').value = '15';
+            document.getElementById('startDate').value = '';
+            document.getElementById('endDate').value = '';
+            
+            // Populate clock dropdown
+            const clockSelect = document.getElementById('clockSelect');
+            clockSelect.innerHTML = '';
+            
+            clocks.forEach(clock => {
+                const option = document.createElement('option');
+                option.value = clock.id;
+                option.textContent = clock.city;
+                clockSelect.appendChild(option);
+            });
+            
+            // Pre-select clock if provided
+            if (clockId) {
+                clockSelect.value = clockId;
+            }
+            
+            closeModal('eventModal');
+            showModal('addEventModal');
+        }
+
+        function editEvent(index) {
+            const event = events[index];
+            if (!event) return;
+            
+            editingEventIndex = index;
+            
+            document.getElementById('eventName').value = event.name;
+            document.getElementById('clockSelect').value = event.clockId;
+            
+            if (event.timeRanges && event.timeRanges.length > 0) {
+                const range = event.timeRanges[0];
+                document.getElementById('startTime').value = `${String(range.start.hours).padStart(2, '0')}:${String(range.start.minutes).padStart(2, '0')}`;
+                document.getElementById('endTime').value = `${String(range.end.hours).padStart(2, '0')}:${String(range.end.minutes).padStart(2, '0')}`;
+                document.getElementById('warnBefore').value = range.warnBefore || '15';
+            }
+            
+            document.getElementById('startDate').value = event.startDate || '';
+            document.getElementById('endDate').value = event.endDate || '';
+            
+            closeModal('eventModal');
+            showModal('addEventModal');
+        }
+
+        function saveEvent() {
+            const name = document.getElementById('eventName').value.trim();
+            if (!name) {
+                alert('Please enter an event name');
+                return;
+            }
+            
+            const clockId = document.getElementById('clockSelect').value;
+            const startTimeStr = document.getElementById('startTime').value;
+            const endTimeStr = document.getElementById('endTime').value;
+            const warnBefore = parseInt(document.getElementById('warnBefore').value) || 15;
+            const startDate = document.getElementById('startDate').value || null;
+            const endDate = document.getElementById('endDate').value || null;
+            
+            if (!startTimeStr || !endTimeStr) {
+                alert('Please enter start and end times');
+                return;
+            }
+            
+            const [startHours, startMinutes] = startTimeStr.split(':').map(Number);
+            const [endHours, endMinutes] = endTimeStr.split(':').map(Number);
+            
+            const timeRange = {
+                start: { hours: startHours, minutes: startMinutes },
+                end: { hours: endHours, minutes: endMinutes },
+                warnBefore: warnBefore
+            };
+            
+            const eventData = {
+                name: name,
+                clockId: clockId,
+                timeRanges: [timeRange],
+                startDate: startDate,
+                endDate: endDate
+            };
+            
+            if (editingEventIndex >= 0) {
+                events[editingEventIndex] = eventData;
+            } else {
+                events.push(eventData);
+            }
+            
+            saveData();
+            closeModal('addEventModal');
+            renderClocks();
+            
+            // If we were in the event manager, reopen it
+            populateEventTable();
+            showModal('eventModal');
+        }
+
+        function deleteEvent(index) {
+            if (confirm('Are you sure you want to delete this event?')) {
+                events.splice(index, 1);
+                saveData();
+                populateEventTable();
+                renderClocks();
+            }
         }
 
         function exportClocks() {
-            const data = JSON.stringify(clocks);
+            const data = JSON.stringify({
+                clocks: clocks,
+                events: events
+            });
+            
             const blob = new Blob([data], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'clocks.json';
+            a.download = 'world-clocks.json';
             a.click();
         }
 
@@ -381,24 +835,52 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
-                    const importedClocks = JSON.parse(e.target.result);
-                    clocks = importedClocks;
-                    document.getElementById('clockContainer').innerHTML = '';
-                    clocks.forEach(createClockElement);
-                    saveClocks();
-                } catch {
+                    const importedData = JSON.parse(e.target.result);
+                    
+                    if (importedData.clocks) {
+                        clocks = importedData.clocks;
+                    }
+                    
+                    if (importedData.events) {
+                        events = importedData.events;
+                    }
+                    
+                    renderClocks();
+                    saveData();
+                } catch (error) {
                     alert('Invalid file format');
+                    console.error(error);
                 }
             };
             reader.readAsText(file);
         }
 
-        function saveClocks() {
-            localStorage.setItem('clocks', JSON.stringify(clocks));
+        function resetToDefault() {
+            if (confirm('Are you sure you want to reset to default settings? This will remove all your custom clocks and events.')) {
+                clocks = JSON.parse(JSON.stringify(defaultClocks)); // Deep clone
+                events = JSON.parse(JSON.stringify(defaultEvents)); // Deep clone
+                positionClocksGrid();
+                renderClocks();
+                saveData();
+            }
+        }
+
+        function saveData() {
+            const data = {
+                clocks: clocks,
+                events: events
+            };
+            localStorage.setItem('worldClockData', JSON.stringify(data));
+        }
+
+        function parseTime(timeString) {
+            if (!timeString) return null;
+            const [hours, minutes] = timeString.split(':').map(Number);
+            return { hours, minutes };
         }
 
         // Initialize the application
-        initialize();
+        document.addEventListener('DOMContentLoaded', initialize);
     </script>
 </body>
 </html>
