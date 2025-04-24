@@ -28,7 +28,13 @@
             cursor: move;
             position: absolute;
             transition: background 0.3s ease, opacity 0.3s ease;
-            width: 200px;
+            width: 250px;
+        }
+        
+        .local-time, .native-time {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
         }
 
         .clock-header {
@@ -373,7 +379,7 @@
                 </div>
                 <div class="time" id="time-${clock.id}"></div>
                 <div class="timezone" onclick="showUtcOffset('${clock.timezone}')">
-                    ${getTimezoneAbbreviation(clock.timezone)}
+                    ${getTimezoneAbbreviation(clock.timezone)} (${clock.timezone})
                 </div>
             `;
             
@@ -388,6 +394,21 @@
                     if (event.startDate || event.endDate) {
                         const dateText = formatDateRange(event.startDate, event.endDate);
                         clockHTML += `<span class="date-badge">${dateText}</span>`;
+                    }
+                    
+                    // Add time information for the first time range
+                    if (event.timeRanges && event.timeRanges.length > 0) {
+                        const range = event.timeRanges[0];
+                        const startFormatted = formatTimeRange(range.start);
+                        const endFormatted = formatTimeRange(range.end);
+                        
+                        // Add native time (time in the timezone)
+                        clockHTML += `<div class="native-time">Native: ${startFormatted}-${endFormatted}</div>`;
+                        
+                        // Add local time conversion
+                        const localStart = convertToLocalTime(range.start, clock.timezone);
+                        const localEnd = convertToLocalTime(range.end, clock.timezone);
+                        clockHTML += `<div class="local-time">Local: ${localStart}-${localEnd}</div>`;
                     }
                 });
                 clockHTML += '</div>';
@@ -418,6 +439,42 @@
             const date = new Date(dateStr);
             return date.toLocaleDateString();
         }
+        
+        function formatTimeRange(timeObj) {
+            return `${String(timeObj.hours).padStart(2, '0')}:${String(timeObj.minutes).padStart(2, '0')}`;
+        }
+        
+        function convertToLocalTime(timeObj, fromTimezone) {
+            // Create a date object using today's date in the source timezone
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth();
+            const day = now.getDate();
+            
+            // Create a date in the source timezone
+            const dateInTimezone = new Date(year, month, day, timeObj.hours, timeObj.minutes);
+            
+            // Format options for the source timezone
+            const options = {
+                timeZone: fromTimezone,
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit'
+            };
+            
+            // Convert to source timezone string
+            const tzString = dateInTimezone.toLocaleTimeString('en-US', options);
+            
+            // Create a date object for the local timezone
+            const localDate = new Date(year, month, day, parseInt(tzString.split(':')[0]), parseInt(tzString.split(':')[1]));
+            
+            // Format for local timezone
+            return localDate.toLocaleTimeString('en-US', {
+                hour12: false, 
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
 
         function startDragging(e) {
             if (e.target.classList.contains('delete-btn') || 
@@ -425,10 +482,15 @@
             
             draggingElement = e.target.closest('.clock');
             const rect = draggingElement.getBoundingClientRect();
+            
+            // Fix the offset issue by setting the offset to the actual mouse position
             offset = [
-                e.clientX - rect.left,
-                e.clientY - rect.top
+                e.clientX - parseInt(draggingElement.style.left || 0),
+                e.clientY - parseInt(draggingElement.style.top || 0)
             ];
+            
+            // Prevent default to avoid text selection during drag
+            e.preventDefault();
             
             document.addEventListener('mousemove', drag);
             document.addEventListener('mouseup', stopDragging);
@@ -594,14 +656,46 @@
             }
         }
 
+        // Map of common timezone abbreviations to IANA timezone strings
+        const timezoneAbbreviations = {
+            'PST': 'America/Los_Angeles',
+            'PDT': 'America/Los_Angeles',
+            'MST': 'America/Denver',
+            'MDT': 'America/Denver',
+            'CST': 'America/Chicago',
+            'CDT': 'America/Chicago',
+            'EST': 'America/New_York',
+            'EDT': 'America/New_York',
+            'GMT': 'Etc/GMT',
+            'UTC': 'UTC',
+            'BST': 'Europe/London',
+            'CET': 'Europe/Paris',
+            'CEST': 'Europe/Paris',
+            'EET': 'Europe/Helsinki',
+            'EEST': 'Europe/Helsinki',
+            'IST': 'Asia/Kolkata',
+            'JST': 'Asia/Tokyo',
+            'AEST': 'Australia/Sydney',
+            'AEDT': 'Australia/Sydney',
+            'NZST': 'Pacific/Auckland',
+            'NZDT': 'Pacific/Auckland'
+        };
+        
         function showAddClockForm() {
-            const timezone = prompt('Enter IANA timezone (e.g., Europe/London):');
-            if (!timezone) return;
+            const timezoneInput = prompt('Enter timezone (e.g., Europe/London, PST, UTC):');
+            if (!timezoneInput) return;
+            
+            let timezone = timezoneInput.trim();
+            
+            // Check if the input is an abbreviation and convert if needed
+            if (timezoneAbbreviations[timezone.toUpperCase()]) {
+                timezone = timezoneAbbreviations[timezone.toUpperCase()];
+            }
             
             try {
                 new Date().toLocaleString('en-US', { timeZone: timezone });
             } catch {
-                alert('Invalid timezone');
+                alert('Invalid timezone. Please enter a valid IANA timezone or common abbreviation.');
                 return;
             }
             
