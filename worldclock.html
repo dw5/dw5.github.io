@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World Clock</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+
+        .clock-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .clock {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            cursor: move;
+            position: absolute;
+        }
+
+        .clock-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .timezone {
+            color: #666;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .time {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        button {
+            padding: 8px 16px;
+            margin: 5px;
+            cursor: pointer;
+        }
+
+        .delete-btn {
+            background: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 3px;
+        }
+		
+		.clock {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            cursor: move;
+            position: absolute;
+            transition: background 0.3s ease;
+            width: 200px;
+        }
+
+        .active-time {
+            background: #e6ffe6 !important;
+        }
+        .warning-time {
+            background: #fff9e6 !important;
+        }
+        .inactive-time {
+            background: #ffe6e6 !important;
+        }
+    </style>
+</head>
+<body>
+    <button onclick="showAddClockForm()">Add Clock</button>
+    <button onclick="exportClocks()">Export Clocks</button>
+    <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importClocks()">
+    <button onclick="document.getElementById('importFile').click()">Import Clocks</button>
+    
+    <div id="clockContainer" class="clock-container"></div>
+
+    <div id="utcModal" class="modal">
+        <p id="utcInfo"></p>
+        <button onclick="closeModal()">Close</button>
+    </div>
+
+    <script>
+        let clocks = [];
+        let draggingElement = null;
+        let offset = [0, 0];
+		
+        const CLOCK_SPACING = 220;
+
+        const defaultClocks = [
+            { 
+                city: 'London', 
+                timezone: 'Europe/London',
+                x: 20,
+                y: 20
+            },
+            { 
+                city: 'Vilnius', 
+                timezone: 'Europe/Vilnius',
+                x: 20 + CLOCK_SPACING,
+                y: 20
+            },
+            { 
+                city: 'DeepSeek API Discount', 
+                timezone: 'UTC',
+                x: 20 + CLOCK_SPACING * 2,
+                y: 20,
+                timeRanges: [{
+                    start: { hours: 16, minutes: 30 },
+                    end: { hours: 0, minutes: 30 },
+                    warnBefore: 15
+                }]
+            }
+        ];
+
+        function initialize() {
+            const savedClocks = localStorage.getItem('clocks');
+            clocks = savedClocks ? JSON.parse(savedClocks) : defaultClocks;
+            
+            // Position clocks in a grid if first load
+            if (!savedClocks) {
+                positionClocksGrid();
+            }
+            
+            clocks.forEach((clock, index) => createClockElement(clock, index));
+            setInterval(updateAllClocks, 1000);
+        }
+		
+		function positionClocksGrid() {
+            clocks.forEach((clock, index) => {
+                clock.x = 20 + (index % 3) * CLOCK_SPACING;
+                clock.y = 20 + Math.floor(index / 3) * 150;
+            });
+        }
+
+        function createClockElement(clock, index) {
+            const element = document.createElement('div');
+            element.className = 'clock';
+            element.style.left = clock.x + 'px';
+            element.style.top = clock.y + 'px';
+            element.innerHTML = `
+                <div class="clock-header">
+                    <h3>${clock.city}</h3>
+                    <button class="delete-btn" onclick="deleteClock(${index})">×</button>
+                </div>
+                <div class="time" id="time-${index}"></div>
+                <div class="timezone" onclick="showUtcOffset('${clock.timezone}')">
+                    ${getTimezoneAbbreviation(clock.timezone)}
+                </div>
+            `;
+            
+            element.addEventListener('mousedown', startDragging);
+            document.getElementById('clockContainer').appendChild(element);
+            updateClockTime(index);
+        }
+
+        function startDragging(e) {
+            if (e.target.classList.contains('delete-btn')) return;
+            
+            draggingElement = e.target.closest('.clock');
+            const rect = draggingElement.getBoundingClientRect();
+            offset = [
+                e.clientX - rect.left,
+                e.clientY - rect.top
+            ];
+            
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('mouseup', stopDragging);
+        }
+
+        function drag(e) {
+            if (!draggingElement) return;
+            
+            draggingElement.style.left = (e.clientX - offset[0]) + 'px';
+            draggingElement.style.top = (e.clientY - offset[1]) + 'px';
+            
+            const index = Array.from(document.querySelectorAll('.clock')).indexOf(draggingElement);
+            clocks[index].x = parseInt(draggingElement.style.left);
+            clocks[index].y = parseInt(draggingElement.style.top);
+            saveClocks();
+        }
+
+        function stopDragging() {
+            draggingElement = null;
+            document.removeEventListener('mousemove', drag);
+            document.removeEventListener('mouseup', stopDragging);
+        }
+
+        function updateAllClocks() {
+            clocks.forEach((_, index) => updateClockTime(index));
+        }
+
+        function updateClockTime(index) {
+            const timeElement = document.getElementById(`time-${index}`);
+            if (!timeElement) return;
+            
+            const options = {
+                timeZone: clocks[index].timezone,
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            };
+            
+            timeElement.textContent = new Date().toLocaleTimeString('en-US', options);
+            // Handle time range highlighting
+            const clockObj = clocks[index];
+            if (clockObj.timeRanges) {
+                const now = new Date();
+                const tz = clockObj.timezone === 'UTC' ? 'UTC' : 'local';
+                
+                clockObj.timeRanges.forEach(range => {
+                    const status = getTimeRangeStatus(now, range, tz);
+                    element.classList.remove('active-time', 'warning-time', 'inactive-time');
+                    element.classList.add(`${status}-time`);
+                });
+            }
+        }
+		
+		
+        function getTimeRangeStatus(now, range, timezone) {
+            const current = {
+                hours: timezone === 'UTC' ? now.getUTCHours() : now.getHours(),
+                minutes: timezone === 'UTC' ? now.getUTCMinutes() : now.getMinutes()
+            };
+            
+            const start = range.start;
+            const end = range.end;
+            const warnBefore = range.warnBefore || 0;
+
+            // Convert all times to minutes
+            const currentMinutes = current.hours * 60 + current.minutes;
+            const startMinutes = start.hours * 60 + start.minutes;
+            const endMinutes = end.hours * 60 + end.minutes;
+
+            // Handle overnight ranges
+            const isOvernight = endMinutes < startMinutes;
+            
+            // Check warning period first
+            const warningStart = (startMinutes - warnBefore + 1440) % 1440;
+            if (isOvernight ?
+                (currentMinutes >= warningStart || currentMinutes < startMinutes) :
+                (currentMinutes >= warningStart && currentMinutes < startMinutes)) {
+                return 'warning';
+            }
+
+            // Check active period
+            if (isOvernight ?
+                (currentMinutes >= startMinutes || currentMinutes < endMinutes) :
+                (currentMinutes >= startMinutes && currentMinutes < endMinutes)) {
+                return 'active';
+            }
+
+            return 'inactive';
+        }
+
+        function getTimezoneAbbreviation(timezone) {
+            try {
+                const formatter = new Intl.DateTimeFormat('en-US', {
+                    timeZone: timezone,
+                    timeZoneName: 'short'
+                });
+                return formatter.formatToParts().find(p => p.type === 'timeZoneName').value;
+            } catch {
+                return 'INVALID';
+            }
+        }
+
+        function showAddClockForm() {
+            const timezone = prompt('Enter IANA timezone (e.g., Europe/London):');
+            if (!timezone) return;
+            
+            try {
+                new Date().toLocaleString('en-US', { timeZone: timezone });
+            } catch {
+                alert('Invalid timezone');
+                return;
+            }
+            
+            const city = prompt('Enter city/label name:') || timezone;
+            const newClock = {
+                city,
+                timezone,
+                x: 20,
+                y: 20 + clocks.length * 80
+            };
+            
+            clocks.push(newClock);
+            createClockElement(newClock, clocks.length - 1);
+            saveClocks();
+			
+            // Add time range configuration
+            if (confirm('Add time range for highlights?')) {
+                const start = prompt('Start time (HH:MM):');
+                const end = prompt('End time (HH:MM):');
+                const warn = prompt('Warn before (minutes):', 15);
+                
+                newClock.timeRanges = [{
+                    start: parseTime(start),
+                    end: parseTime(end),
+                    warnBefore: parseInt(warn)
+                }];
+            }
+
+            // Position new clock in grid
+            newClock.x = 20 + (clocks.length % 3) * CLOCK_SPACING;
+            newClock.y = 20 + Math.floor(clocks.length / 3) * 150;
+            
+            clocks.push(newClock);
+            createClockElement(newClock, clocks.length - 1);
+            saveClocks();
+        }
+
+        function parseTime(timeString) {
+            const [hours, minutes] = timeString.split(':').map(Number);
+            return { hours, minutes };
+        }
+
+        function deleteClock(index) {
+            clocks.splice(index, 1);
+            document.getElementById('clockContainer').innerHTML = '';
+            clocks.forEach(createClockElement);
+            saveClocks();
+        }
+
+        function showUtcOffset(timezone) {
+            const date = new Date();
+            const utcOffset = date.toLocaleString('en-US', {
+                timeZone: timezone,
+                timeZoneName: 'longOffset'
+            }).split(' ').pop();
+            
+            document.getElementById('utcInfo').textContent = `${timezone} - ${utcOffset}`;
+            document.getElementById('utcModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('utcModal').style.display = 'none';
+        }
+
+        function exportClocks() {
+            const data = JSON.stringify(clocks);
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'clocks.json';
+            a.click();
+        }
+
+        function importClocks() {
+            const file = document.getElementById('importFile').files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedClocks = JSON.parse(e.target.result);
+                    clocks = importedClocks;
+                    document.getElementById('clockContainer').innerHTML = '';
+                    clocks.forEach(createClockElement);
+                    saveClocks();
+                } catch {
+                    alert('Invalid file format');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function saveClocks() {
+            localStorage.setItem('clocks', JSON.stringify(clocks));
+        }
+
+        // Initialize the application
+        initialize();
+    </script>
+</body>
+</html>
