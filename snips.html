@@ -256,6 +256,7 @@ Replace: <pre>S$2E$3 $1 $4</pre></b>
 	    ":sftp,host=NEW_HOST,user=NEW_USER,key_file=/path/to/new/key:/dest/path" \
 	    -P --create-empty-src-dirs -l
 	  </pre>
+    <pre>rclone copy --sftp-host=HOSTNAME --sftp-user=USERNAME --sftp-port=22 --sftp-ask-password :sftp:FolderInRemoteSSH -P LOCALFOLDER</pre>
 	  <pre>rewrite ^/git/?(.*)$ /$1 break;
         sub_filter_types text/html text/css application/javascript;
         sub_filter 'href="/' 'href="/git/';
