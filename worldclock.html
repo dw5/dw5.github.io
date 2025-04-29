@@ -481,29 +481,57 @@
         }
         
         function convertToLocalTime(timeObj, fromTimezone) {
-            try {
-                // Get today's date
-                const today = new Date();
-                
-                // Build a string like '2025-04-29T16:30:00'
-                const timeString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}T${String(timeObj.hours).padStart(2, '0')}:${String(timeObj.minutes).padStart(2, '0')}:00`;
-
-                // Parse that string as if it were in the source timezone
-                const utcDate = new Date(timeString + 'Z'); // 'Z' = UTC
-                const tzDateStr = utcDate.toLocaleString('en-US', { timeZone: fromTimezone });
-                const tzDate = new Date(tzDateStr);
-
-                // Now convert to browser local
-                return tzDate.toLocaleTimeString('en-US', {
-                    hour12: false,
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-            } catch (e) {
-                console.error('convertToLocalTime error:', e);
-                return '--:--';
-            }
-        }
+			try {
+				// Get the current date
+				const now = new Date();
+				const year = now.getFullYear();
+				const month = now.getMonth();
+				const day = now.getDate();
+				
+				// Create a date string in ISO format with the given time
+				const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(timeObj.hours).padStart(2, '0')}:${String(timeObj.minutes).padStart(2, '0')}:00`;
+				
+				// Create a Date object - this will be interpreted in the local timezone
+				const localDate = new Date(dateString);
+				
+				// Get how this time would appear in the source timezone
+				const inSourceTz = localDate.toLocaleTimeString('en-US', {
+					timeZone: fromTimezone,
+					hour12: false,
+					hour: '2-digit',
+					minute: '2-digit'
+				});
+				
+				// Parse the source timezone time
+				const [sourceHours, sourceMinutes] = inSourceTz.split(':').map(Number);
+				
+				// Calculate the difference between what we want and what we got
+				let hoursDiff = timeObj.hours - sourceHours;
+				let minutesDiff = timeObj.minutes - sourceMinutes;
+				
+				// Apply this difference to get the correct local time
+				let resultHours = localDate.getHours() + hoursDiff;
+				let resultMinutes = localDate.getMinutes() + minutesDiff;
+				
+				// Normalize the results
+				while (resultMinutes >= 60) {
+					resultHours += 1;
+					resultMinutes -= 60;
+				}
+				while (resultMinutes < 0) {
+					resultHours -= 1;
+					resultMinutes += 60;
+				}
+				
+				resultHours = (resultHours + 24) % 24;
+				
+				// Format and return
+				return `${String(resultHours).padStart(2, '0')}:${String(resultMinutes).padStart(2, '0')}`;
+			} catch (e) {
+				console.error('convertToLocalTime error:', e);
+				return '--:--';
+			}
+		}
 
         function startDragging(e) {
             if (e.target.classList.contains('delete-btn') || 
@@ -987,6 +1015,17 @@
             if (confirm('Are you sure you want to reset to default settings? This will remove all your custom clocks and events.')) {
                 clocks = JSON.parse(JSON.stringify(defaultClocks)); // Deep clone
                 events = JSON.parse(JSON.stringify(defaultEvents)); // Deep clone
+
+                // Add local clock after resetting
+                const localTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                clocks.unshift({
+                    id: 'clock-local',
+                    city: 'Local Time',
+                    timezone: localTimezone,
+                    x: 20,
+                    y: 20
+                });
+
                 positionClocksGrid();
                 renderClocks();
                 saveData();
