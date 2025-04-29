@@ -482,51 +482,50 @@
         
         function convertToLocalTime(timeObj, fromTimezone) {
 			try {
-				// Get the current date
+				// Create a reference time at noon UTC today
 				const now = new Date();
-				const year = now.getFullYear();
-				const month = now.getMonth();
-				const day = now.getDate();
+				const refTime = new Date(Date.UTC(
+					now.getUTCFullYear(),
+					now.getUTCMonth(),
+					now.getUTCDate(),
+					12, 0, 0  // Noon UTC to avoid day boundary issues
+				));
 				
-				// Create a date string in ISO format with the given time
-				const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(timeObj.hours).padStart(2, '0')}:${String(timeObj.minutes).padStart(2, '0')}:00`;
-				
-				// Create a Date object - this will be interpreted in the local timezone
-				const localDate = new Date(dateString);
-				
-				// Get how this time would appear in the source timezone
-				const inSourceTz = localDate.toLocaleTimeString('en-US', {
+				// Get how noon UTC is displayed in both timezones
+				const fromTzTime = refTime.toLocaleTimeString('en-US', {
 					timeZone: fromTimezone,
 					hour12: false,
 					hour: '2-digit',
 					minute: '2-digit'
 				});
 				
-				// Parse the source timezone time
-				const [sourceHours, sourceMinutes] = inSourceTz.split(':').map(Number);
+				const localTzTime = refTime.toLocaleTimeString('en-US', {
+					hour12: false,
+					hour: '2-digit',
+					minute: '2-digit'
+				});
 				
-				// Calculate the difference between what we want and what we got
-				let hoursDiff = timeObj.hours - sourceHours;
-				let minutesDiff = timeObj.minutes - sourceMinutes;
+				// Parse the times to calculate timezone difference
+				const [fromHours, fromMinutes] = fromTzTime.split(':').map(Number);
+				const [localHours, localMinutes] = localTzTime.split(':').map(Number);
 				
-				// Apply this difference to get the correct local time
-				let resultHours = localDate.getHours() + hoursDiff;
-				let resultMinutes = localDate.getMinutes() + minutesDiff;
+				// Calculate time difference between timezones
+				const totalFromMinutes = fromHours * 60 + fromMinutes;
+				const totalLocalMinutes = localHours * 60 + localMinutes;
+				let diffMinutes = totalLocalMinutes - totalFromMinutes;
 				
-				// Normalize the results
-				while (resultMinutes >= 60) {
-					resultHours += 1;
-					resultMinutes -= 60;
-				}
-				while (resultMinutes < 0) {
-					resultHours -= 1;
-					resultMinutes += 60;
-				}
+				// Apply difference to input time
+				let resultMinutes = timeObj.hours * 60 + timeObj.minutes + diffMinutes;
 				
-				resultHours = (resultHours + 24) % 24;
+				// Normalize to 24-hour day
+				resultMinutes = (resultMinutes + 1440) % 1440; // 1440 = 24*60
 				
-				// Format and return
-				return `${String(resultHours).padStart(2, '0')}:${String(resultMinutes).padStart(2, '0')}`;
+				// Convert back to hours and minutes
+				const resultHours = Math.floor(resultMinutes / 60);
+				const finalMinutes = resultMinutes % 60;
+				
+				// Format the result
+				return `${String(resultHours).padStart(2, '0')}:${String(finalMinutes).padStart(2, '0')}`;
 			} catch (e) {
 				console.error('convertToLocalTime error:', e);
 				return '--:--';
