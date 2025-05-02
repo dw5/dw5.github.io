@@ -54,6 +54,10 @@ gap:8px;
 <pre>rclone serve ftp --addr :2121 --vfs-cache-mode full --rc --dir-cache-time 3s .</pre>
 <pre>rclone purge include="*.partial"</pre>
 <pre>for file in *‛？*; do mv "$file" "$(echo "$file" | sed 's/‛？//g')"; done</pre>
+<pre>type = sftp
+shell_type = unix
+md5sum_command = md5sum
+sha1sum_command = sha1sum</pre>
 </pre>
 </details>
 
