@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Compare ID Lists</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 2rem;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+    textarea {
+      width: 100%;
+      height: 150px;
+      margin-bottom: 1rem;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      resize: vertical;
+    }
+    .container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .output {
+      margin-top: 2rem;
+      background: #fff;
+      padding: 1rem;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+    button {
+      padding: 10px 20px;
+      background-color: #007bff;
+      border: none;
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <h1>Compare ID Lists</h1>
+  <div class="container">
+    <div>
+      <h3>Input A</h3>
+      <textarea id="inputA" placeholder="Paste or drop file contents here..."></textarea>
+    </div>
+    <div>
+      <h3>Input B</h3>
+      <textarea id="inputB" placeholder="Paste or drop file contents here..."></textarea>
+    </div>
+  </div>
+  <button onclick="compareIDs()">Compare</button>
+
+  <div class="output">
+    <h3>Results</h3>
+    <div><strong>Only in Input A:</strong><pre id="onlyInA"></pre></div>
+    <div><strong>Only in Input B:</strong><pre id="onlyInB"></pre></div>
+  </div>
+
+  <script>
+    function getIDs(text) {
+      return new Set(text.split(/[\r\n]+/).map(id => id.trim()).filter(Boolean));
+    }
+
+    function compareIDs() {
+      const inputA = document.getElementById('inputA').value;
+      const inputB = document.getElementById('inputB').value;
+
+      const setA = getIDs(inputA);
+      const setB = getIDs(inputB);
+
+      const onlyInA = [...setA].filter(id => !setB.has(id));
+      const onlyInB = [...setB].filter(id => !setA.has(id));
+
+      document.getElementById('onlyInA').textContent = onlyInA.join('\n') || 'None';
+      document.getElementById('onlyInB').textContent = onlyInB.join('\n') || 'None';
+    }
+  </script>
+</body>
+</html>
