@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Unicode Newline Copy Tool</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    .entry {
+      margin-bottom: 20px;
+    }
+    button {
+      margin-right: 10px;
+    }
+    input {
+      width: 200px;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+  <h2>Unicode Newline Characters</h2>
+
+  <div class="entry">
+    <strong>LF (Line Feed, U+000A)</strong><br>
+    <button onclick="copyChar('\u000A')">Copy</button>
+    <input type="text" value="\u000A" readonly onfocus="this.select()">
+  </div>
+
+  <div class="entry">
+    <strong>CR (Carriage Return, U+000D)</strong><br>
+    <button onclick="copyChar('\u000D')">Copy</button>
+    <input type="text" value="\u000D" readonly onfocus="this.select()">
+  </div>
+
+  <div class="entry">
+    <strong>CR + LF (U+000D U+000A)</strong><br>
+    <button onclick="copyChar('\u000D\u000A')">Copy</button>
+    <input type="text" value="\u000D\u000A" readonly onfocus="this.select()">
+  </div>
+
+  <div class="entry">
+    <strong>NEL (Next Line, U+0085)</strong><br>
+    <button onclick="copyChar('\u0085')">Copy</button>
+    <input type="text" value="\u0085" readonly onfocus="this.select()">
+  </div>
+
+  <div class="entry">
+    <strong>LS (Line Separator, U+2028)</strong><br>
+    <button onclick="copyChar('\u2028')">Copy</button>
+    <input type="text" value="\u2028" readonly onfocus="this.select()">
+  </div>
+
+  <div class="entry">
+    <strong>PS (Paragraph Separator, U+2029)</strong><br>
+    <button onclick="copyChar('\u2029')">Copy</button>
+    <input type="text" value="\u2029" readonly onfocus="this.select()">
+  </div>
+
+  <script>
+    function copyChar(char) {
+      const blob = new Blob([char], { type: 'text/plain' });
+      const data = [new ClipboardItem({ 'text/plain': blob })];
+      navigator.clipboard.write(data).then(() => {
+        alert("Copied to clipboard!");
+      }, () => {
+        alert("Clipboard copy failed.");
+      });
+    }
+  </script>
+</body>
+</html>
