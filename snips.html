@@ -284,6 +284,11 @@ FallbackNTP=0.pool.ntp.org 1.pool.ntp.org
     </pre>
     <pre>timedatectl set-timezone Europe/Vilnius && mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u root -p mysql</pre>
     <pre>sudo timedatectl set-ntp on && sudo systemctl restart systemd-timesyncd</pre>
+    <pre>powertop --auto-tune</pre>
+    <pre>usb-devices</pre>
+    <pre>lsusb -v -d 0bda:8176</pre>
+    <pre>dmesg --follow</pre>
+    <pre>udevadm monitor --subsystem-match=usb</pre>
   </pre>
 </details>
 
