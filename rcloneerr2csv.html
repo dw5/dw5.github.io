@@ -45,6 +45,8 @@
 <body>
 
 <h1>Rclone Error Log to CSV</h1>
+<pre>rclone sync --use-json-log --log-level=ERROR --log-file=rclone-errors.json</pre>
+<pre>jq -r '. | select(.level=="error") | [.msg, .file, .object, .time] | @csv' rclone-errors.json > errors.csv</pre>
 
 <label for="fileInput">Upload Rclone Log File:</label>
 <input type="file" id="fileInput" accept=".json,.log">
