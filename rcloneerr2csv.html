@@ -46,11 +46,11 @@
 
 <h1>Rclone Error Log to CSV</h1>
 
-<label for="fileInput">Upload JSON File:</label>
-<input type="file" id="fileInput" accept=".json">
+<label for="fileInput">Upload Rclone Log File:</label>
+<input type="file" id="fileInput" accept=".json,.log">
 
-<label for="jsonInput">Or paste JSON content:</label>
-<textarea id="jsonInput" rows="10" placeholder="Paste JSON content here..."></textarea>
+<label for="jsonInput">Or paste log content:</label>
+<textarea id="jsonInput" rows="10" placeholder="Paste log content here (NDJSON)..."></textarea>
 
 <br>
 <button onclick="parseInput()">Parse</button>
@@ -77,29 +77,34 @@
     if (fileInput.files.length > 0) {
       const reader = new FileReader();
       reader.onload = function (e) {
-        processJson(e.target.result);
+        processNDJSON(e.target.result);
       };
       reader.readAsText(fileInput.files[0]);
     } else if (textInput.trim()) {
-      processJson(textInput);
+      processNDJSON(textInput);
     } else {
-      alert("Please upload a file or paste JSON content.");
+      alert("Please upload a file or paste log content.");
     }
   }
 
-  function processJson(content) {
-    try {
-      const json = JSON.parse(content);
-      parsedData = (Array.isArray(json) ? json : [json])
-        .filter(entry => entry.level === "error")
-        .map(({ msg, file, object, time }) => [
-          msg || "", file || "", object || "", time || ""
-        ]);
-
-      renderTable(parsedData);
-    } catch (e) {
-      alert("Invalid JSON format.");
+  function processNDJSON(content) {
+    parsedData = [];
+    const lines = content.split("\n");
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      try {
+        const obj = JSON.parse(line);
+        if (obj.level === "error") {
+          parsedData.push([
+            obj.msg || "", obj.file || "", obj.object || "", obj.time || ""
+          ]);
+        }
+      } catch (err) {
+        // silently skip invalid JSON lines
+      }
     }
+
+    renderTable(parsedData);
   }
 
   function renderTable(data) {
