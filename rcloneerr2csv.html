@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Rclone Error Log to CSV</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 2rem;
+      background: #f9f9f9;
+    }
+    h1 {
+      text-align: center;
+    }
+    textarea, input[type="file"] {
+      width: 100%;
+      padding: 0.5rem;
+      margin-top: 1rem;
+      margin-bottom: 1rem;
+    }
+    button {
+      padding: 0.5rem 1rem;
+      margin-top: 1rem;
+      margin-right: 1rem;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 2rem;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 0.5rem;
+      text-align: left;
+    }
+    th {
+      background: #eee;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Rclone Error Log to CSV</h1>
+
+<label for="fileInput">Upload JSON File:</label>
+<input type="file" id="fileInput" accept=".json">
+
+<label for="jsonInput">Or paste JSON content:</label>
+<textarea id="jsonInput" rows="10" placeholder="Paste JSON content here..."></textarea>
+
+<br>
+<button onclick="parseInput()">Parse</button>
+<button onclick="downloadCSV()">Download CSV</button>
+
+<table id="outputTable" style="display: none;">
+  <thead>
+    <tr>
+      <th>Message</th>
+      <th>File</th>
+      <th>Object</th>
+      <th>Time</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script>
+  let parsedData = [];
+
+  function parseInput() {
+    const fileInput = document.getElementById("fileInput");
+    const textInput = document.getElementById("jsonInput").value;
+    if (fileInput.files.length > 0) {
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        processJson(e.target.result);
+      };
+      reader.readAsText(fileInput.files[0]);
+    } else if (textInput.trim()) {
+      processJson(textInput);
+    } else {
+      alert("Please upload a file or paste JSON content.");
+    }
+  }
+
+  function processJson(content) {
+    try {
+      const json = JSON.parse(content);
+      parsedData = (Array.isArray(json) ? json : [json])
+        .filter(entry => entry.level === "error")
+        .map(({ msg, file, object, time }) => [
+          msg || "", file || "", object || "", time || ""
+        ]);
+
+      renderTable(parsedData);
+    } catch (e) {
+      alert("Invalid JSON format.");
+    }
+  }
+
+  function renderTable(data) {
+    const table = document.getElementById("outputTable");
+    const tbody = table.querySelector("tbody");
+    tbody.innerHTML = "";
+    data.forEach(row => {
+      const tr = document.createElement("tr");
+      row.forEach(cell => {
+        const td = document.createElement("td");
+        td.textContent = cell;
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+    table.style.display = data.length ? "table" : "none";
+  }
+
+  function downloadCSV() {
+    if (!parsedData.length) {
+      alert("No data to export.");
+      return;
+    }
+
+    const headers = ["msg", "file", "object", "time"];
+    const rows = [
+      headers,
+      ...parsedData
+    ].map(row => row.map(val => `"${val.replace(/"/g, '""')}"`).join(","));
+
+    const csvContent = rows.join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "errors.csv";
+    link.click();
+  }
+</script>
+
+</body>
+</html>
