@@ -85,10 +85,11 @@ sha1sum_command = sha1sum</pre>
 
 
 <details>
-<summary>windows</summary>
+<summary>ows</summary>
 <pre id="copyText" style="border: dotted;">
 <pre>start ms-cxh:localonly</pre>
 <pre>shell:appsfolder</pre>
+<pre>Get-WmiObject win32_physicalmemory | Format-Table Manufacturer,Banklabel,Configuredclockspeed,Devicelocator,Capacity,Serialnumber -autosize</pre>
 <pre>dir *.mp4 /b /a-d | find /c /v ""</pre>
 <pre>Get-Content -Path "c:\file.ps1" | Out-String | Invoke-Expression -ErrorAction SilentlyContinue</pre>
 <pre>Get-StartApps | Select-Object Name, AppID | Export-Csv -Path "shellappsfolder.csv" -NoTypeInformation</pre>
