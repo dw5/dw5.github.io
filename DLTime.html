@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Download Time Calculator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f7fa;
+      padding: 20px;
+      color: #333;
+    }
+    h2 {
+      text-align: center;
+    }
+    label, input, select {
+      display: block;
+      margin: 10px 0;
+    }
+    input, select {
+      padding: 5px;
+      width: 200px;
+    }
+    table {
+      width: 100%;
+      margin-top: 20px;
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+    }
+    th {
+      background-color: #e9ecef;
+    }
+    .section {
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Download Time Estimator</h2>
+  
+  <label for="fileSize">Enter file size:</label>
+  <input type="number" id="fileSize" placeholder="Enter size">
+  <select id="unit">
+    <option value="GB">GB</option>
+    <option value="TB">TB</option>
+  </select>
+
+  <button onclick="calculateTimes()">Calculate Times</button>
+
+  <div class="section">
+    <h3>Download Time at Common Speeds</h3>
+    <table id="speedTable">
+      <thead>
+        <tr>
+          <th>Speed (Mbps)</th>
+          <th>Time to Download</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h3>Estimate Time at Your Speed</h3>
+    <label for="customSpeed">Your Speed (Mbps):</label>
+    <input type="number" id="customSpeed" placeholder="e.g. 50">
+    <button onclick="calculateCustomSpeed()">Calculate Time</button>
+    <p id="customSpeedResult"></p>
+  </div>
+
+  <div class="section">
+    <h3>Estimate Required Speed for Target Time</h3>
+    <label for="targetTime">Target Time (hh:mm:ss):</label>
+    <input type="text" id="targetTime" placeholder="e.g. 01:30:00">
+    <button onclick="calculateRequiredSpeed()">Calculate Speed</button>
+    <p id="requiredSpeedResult"></p>
+  </div>
+
+  <script>
+    const commonSpeeds = [5, 10, 25, 50, 100, 200, 500, 1000];
+
+    function getSizeInGB() {
+      const size = parseFloat(document.getElementById("fileSize").value);
+      const unit = document.getElementById("unit").value;
+      return unit === "TB" ? size * 1024 : size;
+    }
+
+    function secondsToHMS(seconds) {
+      const h = Math.floor(seconds / 3600);
+      const m = Math.floor((seconds % 3600) / 60);
+      const s = Math.floor(seconds % 60);
+      return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+
+    function calculateTimes() {
+      const sizeGB = getSizeInGB();
+      const tbody = document.querySelector("#speedTable tbody");
+      tbody.innerHTML = "";
+
+      commonSpeeds.forEach(speed => {
+        const timeSeconds = (sizeGB * 8 * 1024) / speed; // GB * 8 to get Gbit, *1024 to get Mbit
+        const row = `<tr><td>${speed}</td><td>${secondsToHMS(timeSeconds)}</td></tr>`;
+        tbody.insertAdjacentHTML("beforeend", row);
+      });
+    }
+
+    function calculateCustomSpeed() {
+      const sizeGB = getSizeInGB();
+      const speed = parseFloat(document.getElementById("customSpeed").value);
+      if (!speed || speed <= 0) return;
+      const timeSeconds = (sizeGB * 8 * 1024) / speed;
+      document.getElementById("customSpeedResult").innerText = 
+        `Estimated time: ${secondsToHMS(timeSeconds)}`;
+    }
+
+    function parseTimeToSeconds(timeStr) {
+      const parts = timeStr.split(":").map(Number);
+      if (parts.length !== 3) return NaN;
+      return parts[0] * 3600 + parts[1] * 60 + parts[2];
+    }
+
+    function calculateRequiredSpeed() {
+      const sizeGB = getSizeInGB();
+      const timeStr = document.getElementById("targetTime").value;
+      const totalSeconds = parseTimeToSeconds(timeStr);
+      if (isNaN(totalSeconds) || totalSeconds <= 0) return;
+
+      const totalMbits = sizeGB * 8 * 1024;
+      const requiredSpeed = totalMbits / totalSeconds;
+
+      document.getElementById("requiredSpeedResult").innerText = 
+        `Required speed: ${requiredSpeed.toFixed(2)} Mbps`;
+    }
+  </script>
+</body>
+</html>

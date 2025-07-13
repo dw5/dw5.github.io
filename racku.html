@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Rack Height Calculator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+      background: #f4f4f4;
+      color: #333;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    .calculator {
+      display: grid;
+      grid-template-columns: 150px 1fr;
+      gap: 1rem;
+      max-width: 500px;
+      margin: auto;
+      background: #fff;
+      padding: 1rem;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    .calculator input {
+      padding: 0.5rem;
+      font-size: 1rem;
+      width: 100%;
+    }
+
+    table {
+      width: 100%;
+      max-width: 600px;
+      margin: 2rem auto;
+      border-collapse: collapse;
+      background: #fff;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    th, td {
+      padding: 0.5rem 1rem;
+      border: 1px solid #ccc;
+      text-align: center;
+    }
+
+    th {
+      background: #007BFF;
+      color: #fff;
+    }
+
+    tr:nth-child(even) {
+      background: #f9f9f9;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Rack Height Calculator</h1>
+
+  <div class="calculator">
+    <label for="u">Rack Units (U):</label>
+    <input type="number" id="u" min="0" step="0.1">
+
+    <label for="cm">Height (cm):</label>
+    <input type="number" id="cm" min="0" step="0.1">
+
+    <label for="m">Height (m):</label>
+    <input type="number" id="m" min="0" step="0.01">
+
+    <label for="inch">Height (inches):</label>
+    <input type="number" id="inch" min="0" step="0.1">
+
+    <label for="feet">Height (feet):</label>
+    <input type="number" id="feet" min="0" step="0.01">
+  </div>
+
+  <h2 style="text-align:center;">Common Rack Sizes</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>U</th>
+        <th>cm</th>
+        <th>m</th>
+        <th>Inches</th>
+        <th>Feet</th>
+      </tr>
+    </thead>
+    <tbody id="rackTable"></tbody>
+  </table>
+
+  <script>
+    const uInput = document.getElementById('u');
+    const cmInput = document.getElementById('cm');
+    const mInput = document.getElementById('m');
+    const inchInput = document.getElementById('inch');
+    const feetInput = document.getElementById('feet');
+
+    const INCH_PER_U = 1.75;
+    const CM_PER_INCH = 2.54;
+    const FT_PER_INCH = 1 / 12;
+
+    const inputs = [uInput, cmInput, mInput, inchInput, feetInput];
+
+    function updateFromU(u) {
+      const inches = u * INCH_PER_U;
+      inchInput.value = inches.toFixed(2);
+      cmInput.value = (inches * CM_PER_INCH).toFixed(2);
+      mInput.value = (inches * CM_PER_INCH / 100).toFixed(3);
+      feetInput.value = (inches * FT_PER_INCH).toFixed(3);
+    }
+
+    function updateAll(from, value) {
+      value = parseFloat(value);
+      if (isNaN(value)) return;
+
+      switch (from) {
+        case 'u':
+          updateFromU(value);
+          break;
+        case 'inch':
+          updateFromU(value / INCH_PER_U);
+          uInput.value = (value / INCH_PER_U).toFixed(2);
+          break;
+        case 'cm':
+          updateFromU(value / CM_PER_INCH / INCH_PER_U);
+          uInput.value = (value / CM_PER_INCH / INCH_PER_U).toFixed(2);
+          break;
+        case 'm':
+          updateFromU((value * 100) / CM_PER_INCH / INCH_PER_U);
+          uInput.value = ((value * 100) / CM_PER_INCH / INCH_PER_U).toFixed(2);
+          break;
+        case 'feet':
+          updateFromU((value * 12) / INCH_PER_U);
+          uInput.value = ((value * 12) / INCH_PER_U).toFixed(2);
+          break;
+      }
+    }
+
+    inputs.forEach(input => {
+      input.addEventListener('input', (e) => {
+        updateAll(e.target.id, e.target.value);
+      });
+    });
+
+    // Fill table
+    function fillRackTable() {
+      const tbody = document.getElementById('rackTable');
+      for (let u = 1; u <= 52; u++) {
+        const inches = u * INCH_PER_U;
+        const cm = inches * CM_PER_INCH;
+        const m = cm / 100;
+        const feet = inches * FT_PER_INCH;
+
+        const row = `
+          <tr>
+            <td>${u}</td>
+            <td>${cm.toFixed(2)}</td>
+            <td>${m.toFixed(3)}</td>
+            <td>${inches.toFixed(2)}</td>
+            <td>${feet.toFixed(3)}</td>
+          </tr>
+        `;
+        tbody.insertAdjacentHTML('beforeend', row);
+      }
+    }
+
+    fillRackTable();
+  </script>
+
+</body>
+</html>
