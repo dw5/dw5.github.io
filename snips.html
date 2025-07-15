@@ -181,6 +181,7 @@ Match User tunneluser
 <pre>ffmpeg -f concat -safe 0 -i input.txt -c copy HWD.mp4</pre>
 <pre>-c:a libopus -c:v av1_qsv</pre>
 <pre>-vf scale=3840:2160 -c:a copy</pre>
+<pre>ffmpeg -f rawvideo -pixel_format rgb8 -video_size 32x32 -framerate 10.766666 -i input.raw -f u8 -ar 11025 -ac 1 -i input.raw -sws_flags neighbor -s 240x240 out.mp4</pre>
 <pre>ffmpeg -hwaccel qsv -i file -c:a libopus -c:v av1_qsv </pre>
 <pre>ffenmass -i /home/ubuntu/src-voices-en -ext wav /home/ubuntu/out-voices-en-wav</pre>
 <br>
