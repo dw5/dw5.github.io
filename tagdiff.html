@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Tag Comparison Tool</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    textarea { width: 45%; height: 200px; margin: 10px; }
+    .output { margin-top: 20px; white-space: pre-wrap; background: #f0f0f0; padding: 10px; }
+    button { margin: 5px; }
+  </style>
+</head>
+<body>
+  <h2>Tag Comparison Tool</h2>
+  <div>
+    <textarea id="leftInput" placeholder="Left side Tags (one per line)"></textarea>
+    <textarea id="rightInput" placeholder="Right side Tags (one per line)"></textarea>
+  </div>
+  <div>
+    <button onclick="showUnique('left')">Unique to Left</button>
+    <button onclick="showUnique('right')">Unique to Right</button>
+    <button onclick="showBoth()">Show Both Unique Sets</button>
+  </div>
+  <div class="output" id="output"></div>
+
+  <script>
+    function getTags(id) {
+      return new Set(document.getElementById(id).value.trim().split('\n').map(tag => tag.trim()).filter(Boolean));
+    }
+
+    function showUnique(side) {
+      const left = getTags('leftInput');
+      const right = getTags('rightInput');
+      let result = [];
+
+      if (side === 'left') {
+        result = [...left].filter(tag => !right.has(tag));
+      } else {
+        result = [...right].filter(tag => !left.has(tag));
+      }
+
+      document.getElementById('output').textContent = result.join('\n') || 'No unique tags found.';
+    }
+
+    function showBoth() {
+      const left = getTags('leftInput');
+      const right = getTags('rightInput');
+
+      const onlyLeft = [...left].filter(tag => !right.has(tag));
+      const onlyRight = [...right].filter(tag => !left.has(tag));
+
+      const result = `Unique to Left:\n${onlyLeft.join('\n') || 'None'}\n\nUnique to Right:\n${onlyRight.join('\n') || 'None'}`;
+      document.getElementById('output').textContent = result;
+    }
+  </script>
+</body>
+</html>
