@@ -43,6 +43,7 @@ gap:8px;
 <details>
 <summary>rclone</summary>
 <pre id="copyText" style="border: dotted;">
+<pre>rclone sync --exclude='**/._*' --exclude='.android/**' --multi-thread-streams=32 -P -L --metadata /from/ /to/</pre>
 <pre>-P --transfers=1 --checkers 1 --multi-thread-streams 0  --modify-window 2s</pre>
 <pre>rclone ls --include "*examplefile*" remote:</pre>
 <pre>--config=rclone.conf</pre>
@@ -60,6 +61,7 @@ gap:8px;
 shell_type = unix
 md5sum_command = md5sum
 sha1sum_command = sha1sum</pre>
+<pre>rsync -avz --delete user@host:/path/to/tiles/ /local/path/</pre>
 </pre>
 </details>
 
