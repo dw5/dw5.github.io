@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sieve Rule Builder</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; max-width: 900px; margin: auto; }
+    .rule { border: 1px solid #ccc; padding: 15px; margin-bottom: 10px; border-radius: 8px; }
+    textarea { width: 100%; height: 200px; font-family: monospace; }
+    label { display: block; margin-top: 10px; font-weight: bold; }
+    .flex { display: flex; gap: 10px; }
+    .flex > div { flex: 1; }
+    button { margin-top: 10px; padding: 6px 12px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>Sieve Rule Builder</h1>
+  <div id="rules"></div>
+  <button onclick="addRule()">➕ Add Rule</button>
+  <button onclick="generateScript()">📜 Generate Sieve Script</button>
+  <button onclick="importScript()">📥 Import Sieve Script</button>
+  <input type="file" id="importFile" style="display:none" accept=".sieve">
+  <label for="output">Generated Sieve Script:</label>
+  <textarea id="output" readonly></textarea>
+
+  <script>
+    let ruleId = 0;
+
+    function addRule(data = {}) {
+      const id = ruleId++;
+      const ruleDiv = document.createElement('div');
+      ruleDiv.className = 'rule';
+      ruleDiv.id = `rule-${id}`;
+      ruleDiv.innerHTML = `
+        <div class="flex">
+          <div>
+            <label>Domain</label>
+            <input type="text" value="${data.domain || ''}" placeholder="e.g. drm.8m.lt" class="domain" />
+          </div>
+          <div>
+            <label>Match Type</label>
+            <select class="match">
+              <option value="any" ${data.match === 'any' ? 'selected' : ''}>Any address</option>
+              <option value="catchall" ${data.match === 'catchall' ? 'selected' : ''}>Catchall (non-existent users)</option>
+              <option value="starts" ${data.match === 'starts' ? 'selected' : ''}>Starts with</option>
+              <option value="exact" ${data.match === 'exact' ? 'selected' : ''}>Exact address</option>
+            </select>
+          </div>
+        </div>
+        <label>Address / Prefix</label>
+        <input type="text" value="${data.address || ''}" placeholder="Optional, for starts/exact" class="address" />
+
+        <label>Action</label>
+        <select class="action">
+          <option value="redirect" ${data.action === 'redirect' ? 'selected' : ''}>Redirect</option>
+          <option value="reject" ${data.action === 'reject' ? 'selected' : ''}>Reject</option>
+          <option value="keep" ${data.action === 'keep' ? 'selected' : ''}>Keep</option>
+        </select>
+
+        <label>Action Target</label>
+        <input type="text" value="${data.target || ''}" placeholder="e.g. dom@rethinkmail.com" class="target" />
+
+        <label>Comment (optional)</label>
+        <input type="text" value="${data.comment || ''}" class="comment" placeholder="e.g. Forward catchall to dom" />
+
+        <button onclick="document.getElementById('rules').removeChild(this.parentNode)">🗑️ Remove</button>
+      `;
+      document.getElementById('rules').appendChild(ruleDiv);
+    }
+
+    function generateScript() {
+      const rules = document.querySelectorAll('.rule');
+      let sieve = 'require ["envelope", "redirect", "reject", "keep", "regex"]\n\n';
+
+      rules.forEach(rule => {
+        const domain = rule.querySelector('.domain').value.trim();
+        const match = rule.querySelector('.match').value;
+        const address = rule.querySelector('.address').value.trim();
+        const action = rule.querySelector('.action').value;
+        const target = rule.querySelector('.target').value.trim();
+        const comment = rule.querySelector('.comment').value.trim();
+
+        if (comment) sieve += `# ${comment}\n`;
+
+        switch (match) {
+          case 'any':
+            sieve += `if envelope :domain "to" "${domain}" {\n`;
+            break;
+          case 'catchall':
+            sieve += `if allof ( envelope :domain "to" "${domain}", not address :is "to" ["${address}"] ) {\n`;
+            break;
+          case 'starts':
+            sieve += `if envelope :regex "to" "^${address}.*@${domain.replace('.', '\\.')}$" {\n`;
+            break;
+          case 'exact':
+            sieve += `if address :is "to" "${address}@${domain}" {\n`;
+            break;
+        }
+
+        if (action === 'redirect') sieve += `  redirect "${target}";\n`;
+        else if (action === 'reject') sieve += `  reject "Blocked by Sieve rule.";\n`;
+        else if (action === 'keep') sieve += `  keep;\n`;
+
+        sieve += `}\n\n`;
+      });
+
+      document.getElementById('output').value = sieve;
+    }
+
+    function importScript() {
+      document.getElementById('importFile').click();
+      document.getElementById('importFile').onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function (event) {
+          const content = event.target.result;
+          const ruleRegex = /if.*?\{[\s\S]*?\}/g;
+          const blocks = content.match(ruleRegex);
+          document.getElementById('rules').innerHTML = '';
+          blocks.forEach(block => {
+            const domainMatch = block.match(/\"([a-zA-Z0-9.-]+)\"/);
+            const domain = domainMatch ? domainMatch[1] : '';
+            const isExact = block.includes('address :is');
+            const isRegex = block.includes('regex');
+            const isCatchall = block.includes('not address');
+            const match = isExact ? 'exact' : isRegex ? 'starts' : isCatchall ? 'catchall' : 'any';
+            const addressMatch = block.match(/\"([a-zA-Z0-9._%+-]+)@/);
+            const address = addressMatch ? addressMatch[1] : '';
+            let action = block.includes('redirect') ? 'redirect' : block.includes('reject') ? 'reject' : 'keep';
+            let targetMatch = block.match(/redirect \"(.*?)\";/);
+            let target = targetMatch ? targetMatch[1] : '';
+
+            addRule({ domain, match, address, action, target });
+          });
+        };
+        reader.readAsText(file);
+      };
+    }
+  </script>
+</body>
+</html>
