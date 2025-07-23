@@ -5,13 +5,76 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sieve Rule Builder</title>
   <style>
-    body { font-family: sans-serif; padding: 20px; max-width: 900px; margin: auto; }
-    .rule { border: 1px solid #ccc; padding: 15px; margin-bottom: 10px; border-radius: 8px; }
-    textarea { width: 100%; height: 200px; font-family: monospace; }
-    label { display: block; margin-top: 10px; font-weight: bold; }
-    .flex { display: flex; gap: 10px; }
-    .flex > div { flex: 1; }
-    button { margin-top: 10px; padding: 6px 12px; cursor: pointer; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 30px;
+      max-width: 960px;
+      margin: auto;
+      background: #f9f9fb;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .rule {
+      background: #fff;
+      border: 1px solid #ccc;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+    textarea {
+      width: 100%;
+      height: 200px;
+      font-family: monospace;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    input, select {
+      width: 100%;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #bbb;
+      margin-top: 5px;
+    }
+    .flex {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 10px;
+    }
+    .flex > div {
+      flex: 1;
+    }
+    button {
+      margin-top: 20px;
+      padding: 8px 14px;
+      font-size: 14px;
+      border: none;
+      border-radius: 6px;
+      background: #005f99;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #007acc;
+    }
+    .remove-btn {
+      background: #c62828;
+    }
+    .remove-btn:hover {
+      background: #e53935;
+    }
+    .hidden {
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -36,11 +99,11 @@
         <div class="flex">
           <div>
             <label>Domain</label>
-            <input type="text" value="${data.domain || ''}" placeholder="e.g. drm.8m.lt" class="domain" />
+            <input type="text" value="${data.domain || ''}" placeholder="e.g. drm.8m.lt or *.8m.lt" class="domain" />
           </div>
           <div>
             <label>Match Type</label>
-            <select class="match">
+            <select class="match" onchange="toggleAddressField(${id})">
               <option value="any" ${data.match === 'any' ? 'selected' : ''}>Any address</option>
               <option value="catchall" ${data.match === 'catchall' ? 'selected' : ''}>Catchall (non-existent users)</option>
               <option value="starts" ${data.match === 'starts' ? 'selected' : ''}>Starts with</option>
@@ -48,9 +111,10 @@
             </select>
           </div>
         </div>
-        <label>Address / Prefix</label>
-        <input type="text" value="${data.address || ''}" placeholder="Optional, for starts/exact" class="address" />
-
+        <div class="address-field">
+          <label>Address / Prefix</label>
+          <input type="text" value="${data.address || ''}" placeholder="Optional, for starts/exact" class="address" />
+        </div>
         <label>Action</label>
         <select class="action">
           <option value="redirect" ${data.action === 'redirect' ? 'selected' : ''}>Redirect</option>
@@ -64,9 +128,21 @@
         <label>Comment (optional)</label>
         <input type="text" value="${data.comment || ''}" class="comment" placeholder="e.g. Forward catchall to dom" />
 
-        <button onclick="document.getElementById('rules').removeChild(this.parentNode)">🗑️ Remove</button>
+        <button class="remove-btn" onclick="document.getElementById('rules').removeChild(this.parentNode)">🗑️ Remove</button>
       `;
       document.getElementById('rules').appendChild(ruleDiv);
+      toggleAddressField(id);
+    }
+
+    function toggleAddressField(id) {
+      const rule = document.getElementById(`rule-${id}`);
+      const match = rule.querySelector('.match').value;
+      const addressField = rule.querySelector('.address-field');
+      if (match === 'any' || match === 'catchall') {
+        addressField.classList.add('hidden');
+      } else {
+        addressField.classList.remove('hidden');
+      }
     }
 
     function generateScript() {
@@ -83,26 +159,42 @@
 
         if (comment) sieve += `# ${comment}\n`;
 
+        const isSubdomain = domain.startsWith('*.');
+        const baseDomain = isSubdomain ? domain.substring(2) : domain;
+        const domainRegex = isSubdomain ? `.*\\.${baseDomain.replace('.', '\\.')}` : baseDomain.replace('.', '\\.');
+
         switch (match) {
           case 'any':
-            sieve += `if envelope :domain "to" "${domain}" {\n`;
+            sieve += isSubdomain
+              ? `if envelope :regex "to" ".*@${domainRegex}$" {
+`
+              : `if envelope :domain "to" "${baseDomain}" {
+`;
             break;
           case 'catchall':
-            sieve += `if allof ( envelope :domain "to" "${domain}", not address :is "to" ["${address}"] ) {\n`;
+            sieve += `if allof ( envelope :domain "to" "${baseDomain}", not address :is "to" ["${address}"] ) {
+`;
             break;
           case 'starts':
-            sieve += `if envelope :regex "to" "^${address}.*@${domain.replace('.', '\\.')}$" {\n`;
+            sieve += `if envelope :regex "to" "^${address}.*@${domainRegex}$" {
+`;
             break;
           case 'exact':
-            sieve += `if address :is "to" "${address}@${domain}" {\n`;
+            sieve += `if address :is "to" "${address}@${baseDomain}" {
+`;
             break;
         }
 
-        if (action === 'redirect') sieve += `  redirect "${target}";\n`;
-        else if (action === 'reject') sieve += `  reject "Blocked by Sieve rule.";\n`;
-        else if (action === 'keep') sieve += `  keep;\n`;
+        if (action === 'redirect') sieve += `  redirect "${target}";
+`;
+        else if (action === 'reject') sieve += `  reject "Blocked by Sieve rule.";
+`;
+        else if (action === 'keep') sieve += `  keep;
+`;
 
-        sieve += `}\n\n`;
+        sieve += `}
+
+`;
       });
 
       document.getElementById('output').value = sieve;
@@ -120,13 +212,13 @@
           const blocks = content.match(ruleRegex);
           document.getElementById('rules').innerHTML = '';
           blocks.forEach(block => {
-            const domainMatch = block.match(/\"([a-zA-Z0-9.-]+)\"/);
+            const domainMatch = block.match(/"([a-zA-Z0-9.*-]+)"/);
             const domain = domainMatch ? domainMatch[1] : '';
             const isExact = block.includes('address :is');
             const isRegex = block.includes('regex');
             const isCatchall = block.includes('not address');
             const match = isExact ? 'exact' : isRegex ? 'starts' : isCatchall ? 'catchall' : 'any';
-            const addressMatch = block.match(/\"([a-zA-Z0-9._%+-]+)@/);
+            const addressMatch = block.match(/"([a-zA-Z0-9._%+-]+)@/);
             const address = addressMatch ? addressMatch[1] : '';
             let action = block.includes('redirect') ? 'redirect' : block.includes('reject') ? 'reject' : 'keep';
             let targetMatch = block.match(/redirect \"(.*?)\";/);
