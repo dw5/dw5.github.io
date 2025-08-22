@@ -23,6 +23,7 @@ gap:8px;
 <summary>yt-dlp</summary>
 <pre id="copyText" style="border: dotted;">
 <pre>yt-dlp -f -</pre>
+<pre>--sponsorblock-mark all</pre>
 <pre>yt-dlp URL --parse-metadata "%(description)s - [%(track)s by %(artist)s from %(album)s]:%(meta_comment)s" --replace-in-metadata "artist,album,track,genre,year" ".*" ""  --parse-metadata "%(uploader|)s:%(meta_artist)s" --parse-metadata "%(description|)s:%(meta_title)s" --parse-metadata "%(description|)s:%(album)s" --embed-metadata -o "%(upload_date>%Y%m%d-%H%M%S)s [%(id)s].%(ext)s"</pre>
 <pre>--compat-options allow-unsafe-ext</pre>
 <pre>-f mp4 </pre>
@@ -474,5 +475,6 @@ details > pre {
 </style>
 
 </body></html>
+
 
 
