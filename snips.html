@@ -38,6 +38,7 @@ gap:8px;
 <pre>yt-dlp --flat-playlist --print id</pre>
 <pre>-o %(title).200B.%(ext)s</pre>
 <pre>&lpar;Get-ChildItem -File &apos;&ast;&period;info&period;json&apos; &verbar; Where-Object &lcub; &dollar;&lowbar;&period;Name -match &apos;&Hat;&lpar;&quest;&lt;name&gt;&period;&ast;&rpar;&bsol;s&bsol;&lsqb;&lpar;&quest;&lt;id&gt;&lsqb;&Hat;&rsqb;&rsqb;&plus;&rpar;&bsol;&rsqb;&bsol;&period;info&bsol;&period;json&dollar;&apos; &rcub;&rpar;&period;Count&NewLine;</pre>
+<pre> Get-ChildItem -Path . -Filter *.vtt -Recurse | Select-String -Pattern "ist mentality"</pre>
 </pre>
 </details>
 
@@ -270,6 +271,11 @@ Replace: <pre>S$2E$3 $1 $4</pre></b>
   <pre>sudo EDITOR=nano crontab -e</pre>
   <pre>ln -s \~/Downloads \~/downloads</pre>
   <pre>ss -tuln</pre>
+  <pre>ss -tulpn</pre>
+  <pre>lsof -i -n -P | grep -v -E "86\.36\.222\.222|86\.36\.88\.88"</pre>
+  <pre>ss -tunap | grep ESTAB</pre>
+  <pre>lsof -i -n -P</pre>
+  <pre>find . -type f -exec sh -c 'file -b "$1" | grep -q ELF && echo "$1"' _ {} \;</pre>
   <pre>tmux attach -t 0</pre>
   <pre>tmux kill-ses -t startupSRV</pre>
 	  <pre>rclone copy \
@@ -298,6 +304,10 @@ FallbackNTP=0.pool.ntp.org 1.pool.ntp.org
     <pre>lsusb -v -d 0bda:8176</pre>
     <pre>dmesg --follow</pre>
     <pre>udevadm monitor --subsystem-match=usb</pre>
+    <pre>nmap -p- target_ip</pre>
+    <pre>nmap -p- -T4 target_ip</pre>
+    <pre>nmap -T4 -A -v</pre>
+    <pre>nmap -A -Pn</pre>
   </pre>
 </details>
 
