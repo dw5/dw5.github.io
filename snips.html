@@ -90,7 +90,7 @@ sha1sum_command = sha1sum</pre>
 
 
 <details>
-<summary>ows</summary>
+<summary>windows</summary>
 <pre id="copyText" style="border: dotted;">
 <pre>start ms-cxh:localonly</pre>
 <pre>shell:appsfolder</pre>
@@ -111,6 +111,10 @@ start explorer.exe</pre>
 <pre>find . -type d -name ".thumbnails" -exec rm -r {} \;</pre>
 <small>filetypes in folder counter</small>
 <pre>Get-ChildItem -Recurse | Group-Object Extension -NoElement</pre>
+<pre>powershell.exe -ExecutionPolicy Bypass -WindowStyle hidden -File "pathto.ps1"</pre>
+<pre>WSReset.exe -i</pre>
+<small>App Installer</small>
+<pre>ms-windows-store://pdp/?ProductId=9NBLGGH4NNS1</pre>
 <small>HEVC from OEM</small>
 <pre>ms-windows-store://pdp/?ProductId=9n4wgh0z6vhq</pre>
 <pre>netstat -tunlp</pre>
