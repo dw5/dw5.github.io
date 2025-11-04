@@ -94,6 +94,7 @@ sha1sum_command = sha1sum</pre>
 <pre id="copyText" style="border: dotted;">
 <pre>start ms-cxh:localonly</pre>
 <pre>shell:appsfolder</pre>
+<pre>Set-VMProcessor -VMName VMNAME -ExposeVirtualizationExtensions $true<pre>
 <pre>Get-WmiObject win32_physicalmemory | Format-Table Manufacturer,Banklabel,Configuredclockspeed,Devicelocator,Capacity,Serialnumber -autosize</pre>
 <pre>Get-WmiObject win32_bios | select Serialnumber</pre>
 <pre>powershell "(Get-WmiObject -query ‘select * from SoftwareLicensingService’).OA3xOriginalProductKey"</pre>
@@ -501,6 +502,7 @@ details > pre {
 </style>
 
 </body></html>
+
 
 
 
