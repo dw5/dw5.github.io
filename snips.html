@@ -51,6 +51,7 @@ gap:8px;
 <pre>--config=rclone.conf</pre>
 <pre>--b2-download-url  --b2-disable-checksum</pre>
 <pre>--fast-list --transfers 3 --checkers 6</pre>
+<pre>--delete-empty-src-dirs</pre>
 <pre>bunny --inplace</pre>
 <pre>drive --drive-acknowledge-abuse --drive-use-trash=false</pre>
 <pre>rclone lsd --http-url https://beta.rclone.org :http:</pre>
@@ -276,6 +277,8 @@ Replace: <pre>S$2E$3 $1 $4</pre></b>
 <details>
   <summary>linux</summary>
   <pre id="copyText" style="border: dotted;">
+  <b>#dos2unix</b>
+  <pre>sed -i 's/\r$//' /path/to/file</pre>
   <pre>sudo EDITOR=nano crontab -e</pre>
   <pre>ln -s \~/Downloads \~/downloads</pre>
   <pre>ss -tuln</pre>
@@ -286,6 +289,7 @@ Replace: <pre>S$2E$3 $1 $4</pre></b>
   <pre>find . -type f -exec sh -c 'file -b "$1" | grep -q ELF && echo "$1"' _ {} \;</pre>
   <pre>tmux attach -t 0</pre>
   <pre>tmux kill-ses -t startupSRV</pre>
+  <pre>tmux a</pre>
 	  <pre>rclone copy \
 	    ":sftp,host=OLD_HOST,user=OLD_USER,key_file=/path/to/old/key:/source/path" \
 	    ":sftp,host=NEW_HOST,user=NEW_USER,key_file=/path/to/new/key:/dest/path" \
@@ -317,6 +321,15 @@ FallbackNTP=0.pool.ntp.org 1.pool.ntp.org
     <pre>nmap -p- -T4 target_ip</pre>
     <pre>nmap -T4 -A -v</pre>
     <pre>nmap -A -Pn</pre>
+	<pre># set PATH so it includes user's private bin if it exists
+if [ -d "$HOME/bin" ] ; then
+    PATH="$HOME/bin:$PATH"
+fi
+
+# set PATH so it includes user's private bin if it exists
+if [ -d "$HOME/.local/bin" ] ; then
+    PATH="$HOME/.local/bin:$PATH"
+fi</pre>
   </pre>
 </details>
 
