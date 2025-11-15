@@ -38,8 +38,20 @@ gap:8px;
 <pre>yt-dlp ytarchive:[videoID]</pre>
 <pre>yt-dlp --flat-playlist --print id</pre>
 <pre>-o %(title).200B.%(ext)s</pre>
+<b>count files by info.json</b>
 <pre>&lpar;Get-ChildItem -File &apos;&ast;&period;info&period;json&apos; &verbar; Where-Object &lcub; &dollar;&lowbar;&period;Name -match &apos;&Hat;&lpar;&quest;&lt;name&gt;&period;&ast;&rpar;&bsol;s&bsol;&lsqb;&lpar;&quest;&lt;id&gt;&lsqb;&Hat;&rsqb;&rsqb;&plus;&rpar;&bsol;&rsqb;&bsol;&period;info&bsol;&period;json&dollar;&apos; &rcub;&rpar;&period;Count&NewLine;</pre>
+<b>list ids by info.json</b>
+<pre>Get-ChildItem -File &apos;&ast;&period;info&period;json&apos; &verbar;&NewLine;    Where-Object &lcub; &dollar;&lowbar;&period;Name -match &apos;&Hat;&lpar;&quest;&lt;name&gt;&period;&ast;&rpar;&bsol;s&bsol;&lsqb;&lpar;&quest;&lt;id&gt;&lsqb;&Hat;&rsqb;&rsqb;&plus;&rpar;&bsol;&rsqb;&bsol;&period;info&bsol;&period;json&dollar;&apos; &rcub; &verbar;&NewLine;    ForEach-Object &lcub; &dollar;Matches&period;id &rcub;
+</pre>
+<b>search in all subtitles</b>
 <pre> Get-ChildItem -Path . -Filter *.vtt -Recurse | Select-String -Pattern "ist mentality"</pre>
+<b>bulk subs</b>
+<pre>yt-dlp --flat-playlist --print id (playlist/channel) |
+    % { yt-dlp --skip-download --write-auto-subs --sub-lang lt $_ }
+</pre>
+<pre>yt-dlp --flat-playlist --print id (playlist/channel) \
+  | xargs -I {} yt-dlp --skip-download --write-auto-subs --sub-lang lt {}
+</pre>
 </pre>
 </details>
 
