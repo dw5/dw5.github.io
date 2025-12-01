@@ -326,6 +326,7 @@ Replace: <pre>S$2E$3 $1 $4</pre></b>
 NTP=0.asia.pool.ntp.org 1.asia.pool.ntp.org
 FallbackNTP=0.pool.ntp.org 1.pool.ntp.org
     </pre>
+    <pre>sudo service mariadb restart</pre>
     <pre>timedatectl set-timezone Europe/Vilnius && mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u root -p mysql</pre>
 	<pre>sudo mysql -u root -p
 CREATE USER 'mmdb_app'@'localhost' IDENTIFIED BY 'mmdb_password';
@@ -333,6 +334,19 @@ CREATE DATABASE mmdb_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 GRANT ALL PRIVILEGES ON mmdb_db.* TO 'mmdb_app'@'localhost';
 FLUSH PRIVILEGES;
 exit</pre>
+<pre>php artisan key:generate
+php artisan migrate</pre>
+<pre>php artisan tinker</pre>
+<pre>User::create([
+    'email'    => 'qdev@q.dev',
+    'name'     => 'q dev',
+    'password' => Hash::make('qdev'),
+]);</pre>
+<pre>php artisan serve --host 0.0.0.0</pre>
+<pre>php artisan db:seed</pre>
+<pre>php artisan config:clear
+php artisan config:cache
+systemctl restart php8.2-fpm</pre>
     <pre>sudo timedatectl set-ntp on && sudo systemctl restart systemd-timesyncd</pre>
     <pre>powertop --auto-tune</pre>
     <pre>usb-devices</pre>
