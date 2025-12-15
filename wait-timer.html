@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wait Timer</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 40px;
+            max-width: 400px;
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #fff;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .input-group {
+            margin-bottom: 30px;
+        }
+
+        label {
+            display: block;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.875rem;
+            margin-bottom: 8px;
+        }
+
+        input[type="time"] {
+            width: 100%;
+            padding: 16px 20px;
+            font-size: 1.5rem;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            outline: none;
+            transition: border-color 0.3s, background 0.3s;
+        }
+
+        input[type="time"]:focus {
+            border-color: #4facfe;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        input[type="time"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            cursor: pointer;
+        }
+
+        .timer-display {
+            text-align: center;
+            padding: 30px 20px;
+            background: linear-gradient(135deg, rgba(79, 172, 254, 0.1), rgba(0, 242, 254, 0.1));
+            border-radius: 16px;
+            margin-bottom: 20px;
+        }
+
+        .elapsed-time {
+            font-size: 3.5rem;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.2;
+        }
+
+        .elapsed-label {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.875rem;
+            margin-top: 8px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .status {
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            margin-top: 20px;
+        }
+
+        .status.waiting {
+            background: rgba(255, 193, 7, 0.1);
+            color: #ffc107;
+        }
+
+        .status.long-wait {
+            background: rgba(255, 87, 87, 0.1);
+            color: #ff5757;
+        }
+
+        .now-btn {
+            width: 100%;
+            padding: 14px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: #1a1a2e;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 12px;
+        }
+
+        .now-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(79, 172, 254, 0.3);
+        }
+
+        .now-btn:active {
+            transform: translateY(0);
+        }
+
+        .reset-btn {
+            width: 100%;
+            padding: 12px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            transition: border-color 0.2s, color 0.2s;
+            margin-top: 10px;
+        }
+
+        .reset-btn:hover {
+            border-color: rgba(255, 255, 255, 0.4);
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⏱️ Wait Timer</h1>
+        
+        <div class="input-group">
+            <label for="startTime">When did you start waiting?</label>
+            <input type="time" id="startTime" step="1">
+        </div>
+
+        <button class="now-btn" onclick="setNow()">Start Now</button>
+        
+        <div class="timer-display">
+            <div class="elapsed-time" id="elapsed">00:00:00</div>
+            <div class="elapsed-label">Time Elapsed</div>
+        </div>
+
+        <div id="status" class="status hidden"></div>
+        
+        <button class="reset-btn" onclick="reset()">Reset</button>
+    </div>
+
+    <script>
+        let startTime = null;
+        let timerInterval = null;
+
+        const timeInput = document.getElementById('startTime');
+        const elapsedDisplay = document.getElementById('elapsed');
+        const statusDisplay = document.getElementById('status');
+
+        // Set current time as default
+        function setNow() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            timeInput.value = `${hours}:${minutes}:${seconds}`;
+            startTimer();
+        }
+
+        timeInput.addEventListener('change', startTimer);
+
+        function startTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+
+            const timeValue = timeInput.value;
+            if (!timeValue) return;
+
+            const [hours, minutes, seconds = 0] = timeValue.split(':').map(Number);
+            const now = new Date();
+            startTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, seconds);
+
+            // If the time is in the future, assume it was yesterday
+            if (startTime > now) {
+                startTime.setDate(startTime.getDate() - 1);
+            }
+
+            updateDisplay();
+            timerInterval = setInterval(updateDisplay, 100);
+        }
+
+        function updateDisplay() {
+            if (!startTime) return;
+
+            const now = new Date();
+            const diff = now - startTime;
+
+            if (diff < 0) {
+                elapsedDisplay.textContent = '00:00:00';
+                return;
+            }
+
+            const totalSeconds = Math.floor(diff / 1000);
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+
+            elapsedDisplay.textContent = 
+                `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+            // Update status message
+            updateStatus(totalSeconds);
+        }
+
+        function updateStatus(totalSeconds) {
+            const minutes = Math.floor(totalSeconds / 60);
+            
+            if (minutes >= 30) {
+                statusDisplay.textContent = `🔥 ${minutes} minutes! That's excessive.`;
+                statusDisplay.className = 'status long-wait';
+            } else if (minutes >= 15) {
+                statusDisplay.textContent = `⚠️ ${minutes} minutes waiting...`;
+                statusDisplay.className = 'status long-wait';
+            } else if (minutes >= 5) {
+                statusDisplay.textContent = `⏳ ${minutes} minutes and counting`;
+                statusDisplay.className = 'status waiting';
+            } else if (minutes >= 1) {
+                statusDisplay.textContent = `${minutes} minute${minutes > 1 ? 's' : ''} so far`;
+                statusDisplay.className = 'status waiting';
+            } else {
+                statusDisplay.className = 'status hidden';
+                return;
+            }
+            statusDisplay.classList.remove('hidden');
+        }
+
+        function reset() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+            startTime = null;
+            timeInput.value = '';
+            elapsedDisplay.textContent = '00:00:00';
+            statusDisplay.className = 'status hidden';
+        }
+    </script>
+</body>
+</html>
