@@ -100,6 +100,16 @@
             letter-spacing: 2px;
         }
 
+        .timer-display.countdown {
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 152, 0, 0.1));
+        }
+
+        .timer-display.countdown .elapsed-time {
+            background: linear-gradient(135deg, #ffc107, #ff9800);
+            -webkit-background-clip: text;
+            background-clip: text;
+        }
+
         .status {
             text-align: center;
             padding: 12px;
@@ -189,10 +199,13 @@
     <script>
         let startTime = null;
         let timerInterval = null;
+        let isCountdown = false;
 
         const timeInput = document.getElementById('startTime');
         const elapsedDisplay = document.getElementById('elapsed');
         const statusDisplay = document.getElementById('status');
+        const timerDisplay = document.querySelector('.timer-display');
+        const elapsedLabel = document.querySelector('.elapsed-label');
 
         // Set current time as default
         function setNow() {
@@ -218,9 +231,15 @@
             const now = new Date();
             startTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, seconds);
 
-            // If the time is in the future, assume it was yesterday
-            if (startTime > now) {
-                startTime.setDate(startTime.getDate() - 1);
+            // Determine if countdown or elapsed
+            isCountdown = startTime > now;
+            
+            if (isCountdown) {
+                timerDisplay.classList.add('countdown');
+                elapsedLabel.textContent = 'Time Until';
+            } else {
+                timerDisplay.classList.remove('countdown');
+                elapsedLabel.textContent = 'Time Elapsed';
             }
 
             updateDisplay();
@@ -231,14 +250,23 @@
             if (!startTime) return;
 
             const now = new Date();
-            const diff = now - startTime;
-
-            if (diff < 0) {
-                elapsedDisplay.textContent = '00:00:00';
-                return;
+            let diff;
+            
+            if (isCountdown) {
+                diff = startTime - now;
+                
+                // Countdown finished
+                if (diff <= 0) {
+                    isCountdown = false;
+                    timerDisplay.classList.remove('countdown');
+                    elapsedLabel.textContent = 'Time Elapsed';
+                    diff = now - startTime;
+                }
+            } else {
+                diff = now - startTime;
             }
 
-            const totalSeconds = Math.floor(diff / 1000);
+            const totalSeconds = Math.floor(Math.abs(diff) / 1000);
             const hours = Math.floor(totalSeconds / 3600);
             const minutes = Math.floor((totalSeconds % 3600) / 60);
             const seconds = totalSeconds % 60;
@@ -252,6 +280,21 @@
 
         function updateStatus(totalSeconds) {
             const minutes = Math.floor(totalSeconds / 60);
+            
+            if (isCountdown) {
+                if (minutes >= 60) {
+                    const hrs = Math.floor(minutes / 60);
+                    statusDisplay.textContent = `📅 ${hrs}+ hour${hrs > 1 ? 's' : ''} to go`;
+                } else if (minutes >= 5) {
+                    statusDisplay.textContent = `⏳ ${minutes} minutes to go`;
+                } else if (minutes >= 1) {
+                    statusDisplay.textContent = `Almost time...`;
+                } else {
+                    statusDisplay.textContent = `🔔 Any moment now!`;
+                }
+                statusDisplay.className = 'status waiting';
+                return;
+            }
             
             if (minutes >= 30) {
                 statusDisplay.textContent = `🔥 ${minutes} minutes! That's excessive.`;
@@ -277,9 +320,12 @@
                 clearInterval(timerInterval);
             }
             startTime = null;
+            isCountdown = false;
             timeInput.value = '';
             elapsedDisplay.textContent = '00:00:00';
             statusDisplay.className = 'status hidden';
+            timerDisplay.classList.remove('countdown');
+            elapsedLabel.textContent = 'Time Elapsed';
         }
     </script>
 </body>
